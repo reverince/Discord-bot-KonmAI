@@ -14,6 +14,7 @@ PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
 THEME_COLOR = 0x00a0ee
+ICON_URL = 'https://cdn.discordapp.com/embed/avatars/0.png'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
@@ -85,7 +86,7 @@ async def on_message(message):
 async def 도움():
 	"""ㄴㄱ ㄴㄱㄴㄱ?"""
 	embed = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
-	embed.set_author(name='KonmAI v0.4', url='https://discord.gg/E6eXnpJ', icon_url='https://cdn.discordapp.com/embed/avatars/0.png')
+	embed.set_author(name='KonmAI v0.4', url='https://discord.gg/E6eXnpJ', icon_url=ICON_URL)
 	embed.add_field(name='`더해', value='주어진 수들을 덧셈해 드려요. (무료)', inline=True)
 	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
@@ -94,6 +95,7 @@ async def 도움():
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성끝 `을 입력하세요.', inline=True)
 	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (개발중)', inline=True)
+	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.\n` `소전 레시피 `를 입력하시면 제조 레시피를 알려드려요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -200,7 +202,8 @@ async def 배그(*args):
 
 		if ratings is not None:
 			embed=discord.Embed(title=name, description='시즌: '+year+'-'+month, color=THEME_COLOR)
-			embed.set_author(name='PUBG 솔로 전적 by dak.gg', url='https://dak.gg/profile/'+name+'/'+year+'-'+month+'/krjp', icon_url='https://cdn.discordapp.com/embed/avatars/0.png')
+			embed.set_author(name='PUBG 솔로 전적 by dak.gg', url='https://dak.gg/profile/'+name+'/'+year+'-'+month+'/krjp', icon_url=ICON_URL)
+			embed.set_thumbnail(url=ratings['avatar'])
 			embed.add_field(name='플레이타임', value=re.sub('hours', '시간', re.sub('mins', '분', ratings['solo-playtime'])), inline=True)
 			embed.add_field(name='기록', value=re.sub('W', '승 ', re.sub('T', '탑 ', re.sub('L', '패', ratings['solo-record']))), inline=True)
 			embed.add_field(name='등급', value=ratings['solo-grade'], inline=True)
@@ -215,13 +218,29 @@ async def 배그(*args):
 			embed.add_field(name='헤드샷', value='{} ({})'.format(ratings['solo-headshots'], ratings['solo-headshots-top']), inline=True)
 			embed.add_field(name='저격', value='{} ({})'.format(ratings['solo-longest'], ratings['solo-longest-top']), inline=True)
 			embed.add_field(name='게임 수', value='{} ({})'.format(ratings['solo-games'], ratings['solo-games-top']), inline=True)
-			embed.add_field(name='평균 생존 시간', value='{} ({})'.format(ratings['solo-survived'], ratings['solo-survived-top']), inline=True)
+			embed.add_field(name='생존', value='{} ({})'.format(ratings['solo-survived'], ratings['solo-survived-top']), inline=True)
 			
 			await bot.say(embed=embed)
 		else:
 			await bot.say('아이디 검색에 실패했어요.')
 	else:
 		await bot.say('아이디를 입력해 주세요.')
+
+@bot.command()
+async def 소전(*args):
+	if len(args) > 0:
+		if args[0] == '레시피':
+			embed=discord.Embed(description='인력/탄약/식량/부품', color=THEME_COLOR)
+			embed.set_author(name='소녀전선 제조 레시피 by 나무위키', url='https://namu.wiki/w/%EC%86%8C%EB%85%80%EC%A0%84%EC%84%A0/%EC%9D%B8%ED%98%95%EC%A0%9C%EC%A1%B0?from=%EC%86%8C%EB%85%80%EC%A0%84%EC%84%A0%20%EC%9D%B8%ED%98%95%EC%A0%9C%EC%A1%B0#s-3.1', icon_url=ICON_URL)
+			embed.add_field(name='범용식1: 430/430/430/230', value='어레인지 버전으로 뒷자리를 0~50 정도까지 바꿀 수도 있다. HG와 MG를 제외하고 모든 5성 총기류 가능.', inline=False)
+			embed.add_field(name='범용식2: 630/630/430/430', value='HG을 제외하고 다 나올 수 있는 레시피.', inline=False)
+			await bot.say(embed=embed)	
+		if len(args[0]) in [4, 5]:
+			time = args[0]
+
+			await bot.say('제조시간이 '+time+'인 전술인형: '+', '.join(funcs.gf_times(time)))
+	else:
+		await bot.say('` 레시피 ` 혹은 제조시간을 입력해 주세요.')
 
 # End of commands
 
