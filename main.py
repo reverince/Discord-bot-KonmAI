@@ -4,6 +4,7 @@ from discord.ext.commands import Bot
 import asyncio
 import random
 import re
+import time
 
 import funcs
 
@@ -84,7 +85,7 @@ async def on_message(message):
 async def 도움():
 	"""ㄴㄱ ㄴㄱㄴㄱ?"""
 	embed = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
-	embed.set_author(name="KonmAI v0.3", url="https://discord.gg/E6eXnpJ", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+	embed.set_author(name='KonmAI v0.4', url='https://discord.gg/E6eXnpJ', icon_url='https://cdn.discordapp.com/embed/avatars/0.png')
 	embed.add_field(name='`더해', value='주어진 수들을 덧셈해 드려요. (무료)', inline=True)
 	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
@@ -92,6 +93,7 @@ async def 도움():
 	embed.add_field(name='`검색', value='Daum 검색을 대신해 드려요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (개발중)', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -158,7 +160,7 @@ async def 실검():
 	link = 'https://search.daum.net/search?w=tot&q='
 	time = funcs.korea_time_string()
 
-	embed=discord.Embed(title="Daum 실시간 검색어 순위", url="https://www.daum.net/", description=time+' 기준', color=THEME_COLOR)
+	embed=discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=time+' 기준', color=THEME_COLOR)
 	for i in range(0, 10):
 		embed.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
 	
@@ -186,6 +188,40 @@ async def 초성(ctx, *args):
 @bot.command(pass_context=True)
 async def 초성끝(ctx):
 	await bot.say(ChoQuiz.end(ctx.message.channel))
+
+@bot.command()
+async def 배그(*args):
+	if len(args) > 0:
+		name = args[0]
+		ratings = funcs.pubg_profile(name)
+		year = str(time.gmtime().tm_year)
+		month = str(time.gmtime().tm_mon)
+		if len(month) < 2: month = '0' + month
+
+		if ratings is not None:
+			embed=discord.Embed(title=name, description='시즌: '+year+'-'+month, color=THEME_COLOR)
+			embed.set_author(name='PUBG 솔로 전적 by dak.gg', url='https://dak.gg/profile/'+name+'/'+year+'-'+month+'/krjp', icon_url='https://cdn.discordapp.com/embed/avatars/0.png')
+			embed.add_field(name='플레이타임', value=re.sub('hours', '시간', re.sub('mins', '분', ratings['solo-playtime'])), inline=True)
+			embed.add_field(name='기록', value=re.sub('W', '승 ', re.sub('T', '탑 ', re.sub('L', '패', ratings['solo-record']))), inline=True)
+			embed.add_field(name='등급', value=ratings['solo-grade'], inline=True)
+			embed.add_field(name='점수', value='{} ({})'.format(ratings['solo-score'], ratings['solo-rank']), inline=True)
+			embed.add_field(name='승점', value='{} ({})'.format(ratings['solo-win-rating'], ratings['solo-win-top']), inline=True)
+			embed.add_field(name='승률', value='{} ({})'.format(ratings['solo-winratio'], ratings['solo-winratio-top']), inline=True)
+			embed.add_field(name='TOP10', value='{} ({})'.format(ratings['solo-top10'], ratings['solo-top10-top']), inline=True)
+			embed.add_field(name='여포', value='{} ({})'.format(ratings['solo-kill-rating'], ratings['solo-kill-top']), inline=True)
+			embed.add_field(name='K/D', value='{} ({})'.format(ratings['solo-kd'], ratings['solo-kd-top']), inline=True)
+			embed.add_field(name='평균 데미지', value='{} ({})'.format(ratings['solo-avgdmg'], ratings['solo-avgdmg-top']), inline=True)
+			embed.add_field(name='최대 킬', value='{} ({})'.format(ratings['solo-mostkills'], ratings['solo-mostkills-top']), inline=True)
+			embed.add_field(name='헤드샷', value='{} ({})'.format(ratings['solo-headshots'], ratings['solo-headshots-top']), inline=True)
+			embed.add_field(name='저격', value='{} ({})'.format(ratings['solo-longest'], ratings['solo-longest-top']), inline=True)
+			embed.add_field(name='게임 수', value='{} ({})'.format(ratings['solo-games'], ratings['solo-games-top']), inline=True)
+			embed.add_field(name='평균 생존 시간', value='{} ({})'.format(ratings['solo-survived'], ratings['solo-survived-top']), inline=True)
+			
+			await bot.say(embed=embed)
+		else:
+			await bot.say('아이디 검색에 실패했어요.')
+	else:
+		await bot.say('아이디를 입력해 주세요.')
 
 # End of commands
 

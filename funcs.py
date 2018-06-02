@@ -10,7 +10,7 @@ import time
 def korea_time_string():
 	"""REPL.IT 전용. UTC를 한국 시간으로 변환"""
 	tm = time.gmtime()
-	tm_str = '{}월 {}일 {}:{}:{}'.format(tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
+	tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
 
 	return tm_str
 
@@ -45,12 +45,13 @@ def daum_realtime():
 	response = requests.get('https://www.daum.net/')
 	tree = html.fromstring(response.content)
 
-	word = tree.xpath('//*[@id="mArticle"]/div[2]/div[1]/div[2]/div[1]/ol//text()')
+	word = tree.xpath('//span[@class="txt_issue"]//text()')
 	word = list(filter(lambda x: x != '\n', word))
 
 	result = []
-	for i in range(1, 39, 4):
+	for i in range(0, 20, 2):
 		result.append(word[i])
+	print(result) #DEBUG
 	return result
 
 BASE, CHO, JUNG = 44032, 588, 28
@@ -63,7 +64,7 @@ def cho(keyword):
 	split_keyword_list = list(keyword)
 	result = []
 	for letter in split_keyword_list:
-		if re.match('.*[ㄱ-ㅎㅏ-ㅣ가-힣]+.*', letter) is not None:
+		if re.match('.*[가-힣]+.*', letter) is not None:
 			char_code = ord(letter) - BASE
 			cho_code = int(char_code / CHO)
 			result.append(CHO_LIST[cho_code])
@@ -111,3 +112,55 @@ def jaum_quiz(genre=None):
 
 	print('정답 : '+answer) #DEBUG
 	return answer
+
+# server: krjp, jp, as, na, eu, oc, sa, sea, ru
+def pubg_profile(name, server='krjp'):
+	if server is None:
+		response = requests.get('https://dak.gg/profile/'+name)
+	else:
+		year = str(time.gmtime().tm_year)
+		month = str(time.gmtime().tm_mon)
+		if len(month) < 2: month = '0' + month
+		response = requests.get('https://dak.gg/profile/'+name+'/'+year+'-'+month+'/'+server)
+	
+	tree = html.fromstring(response.content)
+	data = tree.xpath('//section[@class="solo modeItem"]//text()')
+	data = list(map(lambda x: re.sub('\n', '', re.sub(' ', '', x)), data))
+	data = list(filter(lambda x: x != '', data))
+
+	if len(data) >= 44:
+		result = {}
+		result['solo-playtime'] = data[1]
+		result['solo-record'] = data[2]
+		result['solo-grade'] = data[3]
+		result['solo-score'] = data[4]
+		result['solo-rank'] = data[6]
+		if len(data) == 45:
+			result['solo-top'] = data[7]
+		i = 7 if len(data) == 44 else 8
+		result['solo-win-rating'] = data[i]	
+		result['solo-win-top'] = data[i+2]
+		result['solo-kill-rating'] = data[i+3]
+		result['solo-kill-top'] = data[i+5]
+		result['solo-kd'] = data[i+8]
+		result['solo-kd-top'] = data[i+9]
+		result['solo-winratio'] = data[i+11]
+		result['solo-winratio-top'] = data[i+12]
+		result['solo-top10'] = data[i+14]
+		result['solo-top10-top'] = data[i+15]
+		result['solo-avgdmg'] = data[i+17]
+		result['solo-avgdmg-top'] = data[i+18]
+		result['solo-games'] = data[i+20]
+		result['solo-games-top'] = data[i+21]
+		result['solo-mostkills'] = data[i+23]
+		result['solo-mostkills-top'] = data[i+24]
+		result['solo-headshots'] = data[i+26]
+		result['solo-headshots-top'] = data[i+27]
+		result['solo-longest'] = data[i+29]
+		result['solo-longest-top'] = data[i+30]
+		result['solo-survived'] = data[i+32]
+		result['solo-survived-top'] = data[i+33]
+	else:
+		result = None
+
+	return result
