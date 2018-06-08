@@ -6,7 +6,7 @@ import random
 import re
 import time
 
-import funcs
+from funcs import *
 
 TOKEN = '' # SECURE!!!
 
@@ -14,11 +14,12 @@ PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
 THEME_COLOR = 0x00a0ee
-ICON_URL = 'https://cdn.discordapp.com/embed/avatars/0.png'
+ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
 cho_quizs = {} # 초성퀴즈 관리
+bj_games = {} # 블랙잭 관리
 
 class ChoQuiz:
 	def __init__(self):
@@ -50,6 +51,45 @@ class ChoQuiz:
 
 		return result
 
+async def blackjack_dturn(player, channel):
+	while True:
+		if bj_games[player].dsum < 17: # 딜러 히트
+			await asyncio.sleep(1.0)
+			if bj_games[player].cnt_dhit > 0:
+				await bot.send_message(channel, random.choice(BJ_HIT_MESSAGES + BJ_HIT_MESSAGES_MORE))
+			else:
+				await bot.send_message(channel, random.choice(BJ_HIT_MESSAGES + BJ_HIT_MESSAGES_FIRST))
+			bj_games[player].cnt_dhit += 1
+			bj_games[player].ddraw()
+			await asyncio.sleep(1.0)
+			if bj_games[player].dsum > 21:
+				await asyncio.sleep(1.0)
+				await bot.send_message(channel, bj_games[player].result())
+				await asyncio.sleep(0.5)
+				await bot.send_message(channel, random.choice(BJ_BUST_MESSAGES_DEALER))
+				del bj_games[player]
+				break
+			else:
+				await bot.send_message(channel, bj_games[player])
+		else: # 딜러 스탠드
+			await asyncio.sleep(1.0)
+			if bj_games[player].cnt_dhit > 0:
+				await bot.send_message(channel, random.choice(BJ_STAND_MESSAGES + BJ_STAND_MESSAGES_HIT))
+			else:
+				await bot.send_message(channel, random.choice(BJ_STAND_MESSAGES + BJ_STAND_MESSAGES_NOHIT))
+			break
+	if player in bj_games.keys():
+		await asyncio.sleep(1.0)
+		await bot.send_message(channel, bj_games[player].result())
+		await asyncio.sleep(1.0)
+		if bj_games[player].psum > bj_games[player].dsum:
+			await bot.send_message(channel, random.choice(BJ_WIN_MESSAGES_PLAYER))
+		elif bj_games[player].psum < bj_games[player].dsum:
+			await bot.send_message(channel, random.choice(BJ_WIN_MESSAGES_DEALER))
+		else:
+			await bot.send_message(channel, random.choice(BJ_DRAW_MESSAGES))
+		del bj_games[player]
+
 # Events
 
 @bot.event
@@ -62,21 +102,41 @@ async def on_ready():
 	print('연결된 서버 '+str(len(bot.servers))+'개 : '+', '.join(server_names))
 	print('연결된 유저 '+str(len(member_names))+'명 : '+', '.join(member_names))
 	
-	bot.remove_command('help') # `help 명령어 제거
+	bot.remove_command('help')
 	await bot.change_presence(game=discord.Game(name=GAME))
 
 @bot.event
 async def on_message(message):
-	cho_quiz = ChoQuiz.find(message.channel)
+	channel = message.channel
+	# 초성퀴즈 메시지 처리
+	cho_quiz = ChoQuiz.find(channel)
 	if cho_quiz is not None and cho_quiz.answer is not None:
 		if message.content == cho_quiz.answer:
-			await bot.send_message(message.channel, '**{}**님의 [**{}**] 정답! '.format(message.author.mention, cho_quiz.answer))
+			await bot.send_message(channel, '**{}**님의 [**{}**] 정답! '.format(message.author.mention, cho_quiz.answer))
 			cho_quiz.count -= 1
 			if cho_quiz.count > 0:
-				cho_quiz.answer = funcs.jaum_quiz(cho_quiz.genre)
-				await bot.send_message(message.channel, funcs.cho(cho_quiz.answer))
+				cho_quiz.answer = jaum_quiz(cho_quiz.genre)
+				await bot.send_message(channel, cho(cho_quiz.answer))
 			else:
-				await bot.send_message(message.channel, ChoQuiz.end(message.channel))
+				await bot.send_message(channel, ChoQuiz.end(channel))
+	
+	# 블랙잭 메시지 처리
+	if message.author.name in bj_games.keys():
+		player = message.author.name
+		if message.content == '`H':
+			bj_games[player].pdraw()
+			await asyncio.sleep(1.0)
+			await bot.send_message(channel, bj_games[player])
+			if bj_games[player].psum > 21:
+				await asyncio.sleep(0.5)
+				await bot.send_message(channel, random.choice(BJ_BUST_MESSAGES_PLAYER))
+				del bj_games[player]
+			elif bj_games[player].psum == 21:
+				await asyncio.sleep(0.5)
+				await bot.send_message(channel, random.choice(BJ_BLACKJACK_MESSAGES))
+				await blackjack_dturn(player, channel)
+		elif message.content == '`S':
+			await blackjack_dturn(player, channel)
 	
 	await bot.process_commands(message) # 커맨드 처리
 
@@ -91,11 +151,13 @@ async def 도움():
 	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
 	embed.add_field(name='`골라', value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
-	embed.add_field(name='`검색', value='Daum 검색을 대신해 드려요.', inline=True)
+	embed.add_field(name='`사전', value='Daum 사전 검색을 대신해 드려요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
+	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요. 회차를 지정할 수 있어요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성끝 `을 입력하세요.', inline=True)
 	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (개발중)', inline=True)
-	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.\n` `소전 레시피 `를 입력하시면 제조 레시피를 알려드려요.', inline=True)
+	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
+	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -146,27 +208,48 @@ async def 골라(ctx, *args):
 
 	await bot.say(ctx.message.author.mention+'님, 저라면 **'+result+'**예요.')
 
-@bot.command(pass_context=True)
-async def 검색(ctx, *args):
-	"""Daum 검색"""
+@bot.command()
+async def 사전(*args):
+	"""Daum 사전 검색"""
 	if len(args) > 0:
-		result = funcs.daum_search(' '.join(args))
+		result = daum_search(' '.join(args))
 	else:
 		result = '검색 키워드를 입력해 주세요.'
 	
-	await bot.say(ctx.message.author.mention+'님, 검색 결과예요!'+result)
+	await bot.say(result)
 @bot.command()
 async def 실검():
 	"""Daum 실시간 검색어 순위"""
-	ranks = funcs.daum_realtime()
+	ranks = daum_realtime()
 	link = 'https://search.daum.net/search?w=tot&q='
-	time = funcs.korea_time_string()
+	time = korea_time_string()
 
 	embed=discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=time+' 기준', color=THEME_COLOR)
 	for i in range(0, 10):
 		embed.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
 	
 	await bot.say(embed=embed)
+@bot.command()
+async def 로또(*args):
+	success = True
+	if len(args) > 0:
+		if args[0].isnumeric():
+			inning = args[0]
+			data = daum_lotto(inning)
+		else:
+			result = '회차는 숫자로만 입력해 주세요.'
+			success = False
+	else:
+		data = daum_lotto()
+	
+	if success:
+		embed = discord.Embed(description=data[1]+'년 '+data[2]+'월 '+data[3]+'일 추첨', color=THEME_COLOR)
+		embed.set_author(name='로또 추첨 번호 by 다음', url='https://search.daum.net/search?w=tot&q='+data[0]+'%20로또%20당첨%20번호', icon_url=ICON_URL)
+		embed.add_field(name=data[0]+'회', value=bignumrize(' :white_small_square: '.join(data[3:-1])+' :white_medium_small_square: '+data[-1]))
+
+		await bot.say(embed=embed)
+	else:
+		await bot.say(result)
 
 @bot.command(pass_context=True)
 async def 초성(ctx, *args):
@@ -183,8 +266,8 @@ async def 초성(ctx, *args):
 		if cho_quiz.genre not in ['영화', '음악', '동식물', '사전', '게임', '인물', '책']:
 			result = '장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책'
 		else: # 정상
-			cho_quiz.answer = funcs.jaum_quiz(cho_quiz.genre) # 정답 생성
-			result = funcs.cho(cho_quiz.answer)
+			cho_quiz.answer = jaum_quiz(cho_quiz.genre) # 정답 생성
+			result = cho(cho_quiz.answer)
 	
 	await bot.say(result) # 채널에 초성 공개
 @bot.command(pass_context=True)
@@ -193,9 +276,10 @@ async def 초성끝(ctx):
 
 @bot.command()
 async def 배그(*args):
+	"""dak.gg PUBG 프로필 검색"""
 	if len(args) > 0:
 		name = args[0]
-		ratings = funcs.pubg_profile(name)
+		ratings = pubg_profile(name)
 		year = str(time.gmtime().tm_year)
 		month = str(time.gmtime().tm_mon)
 		if len(month) < 2: month = '0' + month
@@ -228,19 +312,28 @@ async def 배그(*args):
 
 @bot.command()
 async def 소전(*args):
+	"""소녀전선 제조시간 검색"""
 	if len(args) > 0:
-		if args[0] == '레시피':
-			embed=discord.Embed(description='인력/탄약/식량/부품', color=THEME_COLOR)
-			embed.set_author(name='소녀전선 제조 레시피 by 나무위키', url='https://namu.wiki/w/%EC%86%8C%EB%85%80%EC%A0%84%EC%84%A0/%EC%9D%B8%ED%98%95%EC%A0%9C%EC%A1%B0?from=%EC%86%8C%EB%85%80%EC%A0%84%EC%84%A0%20%EC%9D%B8%ED%98%95%EC%A0%9C%EC%A1%B0#s-3.1', icon_url=ICON_URL)
-			embed.add_field(name='범용식1: 430/430/430/230', value='어레인지 버전으로 뒷자리를 0~50 정도까지 바꿀 수도 있다. HG와 MG를 제외하고 모든 5성 총기류 가능.', inline=False)
-			embed.add_field(name='범용식2: 630/630/430/430', value='HG을 제외하고 다 나올 수 있는 레시피.', inline=False)
-			await bot.say(embed=embed)	
 		if len(args[0]) in [4, 5]:
-			time = args[0]
+			pd_time = args[0]
 
-			await bot.say('제조시간이 '+time+'인 전술인형: '+', '.join(funcs.gf_times(time)))
+			await bot.say('제조시간이 '+pd_time+'인 전술인형: '+', '.join(gf_times(pd_time)))
 	else:
-		await bot.say('` 레시피 ` 혹은 제조시간을 입력해 주세요.')
+		await bot.say('제조시간을 입력해 주세요.')
+
+@bot.command(pass_context=True)
+async def 블랙잭(ctx):
+	global bj_games
+	player = ctx.message.author.name
+	if player not in bj_games.keys():
+		bj_games[player] = blackjack(player)
+		await bot.say(bj_games[player])
+		if bj_games[player].psum == 21:
+			await asyncio.sleep(0.5)
+			await bot.say(random.choice(BJ_BLACKJACK_MESSAGES))
+			await blackjack_dturn(player, ctx.message.channel)
+	else:
+		await bot.say('이미 진행중인 게임이 있어요.')
 
 # End of commands
 
