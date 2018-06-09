@@ -5,6 +5,7 @@ import asyncio
 import random
 import re
 import time
+import datetime
 
 from funcs import *
 
@@ -21,6 +22,7 @@ bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 cho_quizs = {} # 초성퀴즈 관리
 bj_games = {} # 블랙잭 관리
 lots_games = {} # 제비뽑기 관리
+fortune_users = {} # 운세 관리
 
 class ChoQuiz:
 	def __init__(self):
@@ -144,10 +146,11 @@ async def 도움():
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
 	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요. 회차를 지정할 수 있어요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요.', inline=True)
-	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (WIP)', inline=True)
+	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (미완성)', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
 	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 끝내려면 ` `제비 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (미완성)', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -194,9 +197,17 @@ async def 계산(ctx, *args):
 
 @bot.command(pass_context=True)
 async def 골라(ctx, *args):
-	result = random.choice(args)
+	if len(args) > 1:
+		choice = random.choice(args) if '히오스' not in args else '히오스'
+		CHOICE_MESSAGES = ['**'+choice+'**'+josa(choice, '가')+' 어떨까요? :thinking:', '저라면 **'+choice+'**예요.', '저는 **'+choice+'**'+josa(choice, '를')+' 추천할게요! :relaxed:', '저라면 **'+choice+'**'+josa(choice, '를')+' 선택하겠어요. :relaxed:', '**'+choice+'**'+josa(choice, '로')+' 가죠. :sunglasses:', '답은 **'+choice+'**'+josa(choice, '로')+' 정해져 있어요. :sunglasses:']
 
-	await bot.say(ctx.message.author.mention+'님, 저라면 **'+result+'**예요. :thinking:')
+		result = ctx.message.author.mention+'님, ' + random.choice(CHOICE_MESSAGES)
+	elif len(args) == 1:
+		result = ':sweat:'
+	else:
+		result = '어떤 것들 중에서 고를지 다시 알려주세요.'
+	
+	await bot.say(result)
 
 @bot.command()
 async def 사전(*args):
@@ -259,7 +270,7 @@ async def 초성(ctx, *args):
 			
 			if genre not in ['영화', '음악', '동식물', '사전', '게임', '인물', '책']:
 				result = '장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책'
-			else: # 정상
+			else: # OK
 				answer = jaum_quiz(genre) # 정답 생성
 				cho_quiz = ChoQuiz.start(channel, genre, count, answer)
 				result = cho(answer)
@@ -386,14 +397,24 @@ async def 제비(ctx, *args):
 	
 	await bot.say(result)
 
-# Command for DEBUG
+@bot.command(pass_context=True)
+async def 운세(ctx):
+	author = ctx.message.author
+	today = datetime.date.today()
 
-@bot.command(pass_context=True)
-async def 채널(ctx):
-	await bot.say([m.name for m in ctx.message.server.members])
-@bot.command(pass_context=True)
-async def 초퀴(ctx):
-	await bot.say(cho_quizs)
+	if author not in fortune_users.keys() or (today - fortune_users[author]).days > 0:
+		fortune_users[author] = today
+		result = random.choice(FORTUNES)
+	else:
+		result = '오늘은 이미 오미쿠지를 뽑았어요.'
+	
+	await bot.say(result)
+
+# Commands for DEBUG
+
+@bot.command()
+async def 오늘운():
+	await bot.say([x.name for x in fortune_users])
 
 # End of commands
 
