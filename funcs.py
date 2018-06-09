@@ -8,7 +8,7 @@ import re
 import time
 
 def korea_time_string():
-	"""REPL.IT 전용. UTC를 한국 시간으로 변환"""
+	"""(REPL.IT 전용) UTC를 한국 시간으로 변환"""
 	tm = time.gmtime()
 	tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
 
@@ -198,7 +198,7 @@ def gf_times(pd_time):
 
 class PlayingCard:
 	NUMBERS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
-	SUITS = ['♧', '◇', '♡', '♤']
+	SUITS = [':clubs:', ':diamonds:', ':hearts:', ':spades:']
 
 	def __init__(self, number, suit, value, point):
 		self.number = number
@@ -259,18 +259,14 @@ class Blackjack:
 		self.calc_dsum()
 
 	def __str__(self):
-		return 'Dealer\'s cards: {} ({} + ?)\nYour cards: {} ({})'.format(
+		return 'KonmAI의 패: {} ({} + ?)\n{}님의 패: {} ({})'.format(
 		    ', '.join(PlayingCard.str(self.dcards[0:-1])),
-		    str(PlayingCard.bj_sum(self.dcards[0:-1])), ', '.join(
-		        PlayingCard.str(self.pcards)),
-		    str(PlayingCard.bj_sum(self.pcards)))
+		    str(PlayingCard.bj_sum(self.dcards[0:-1])), self.player.name, ', '.join(PlayingCard.str(self.pcards)), str(PlayingCard.bj_sum(self.pcards)))
 
 	def result(self):
-		return 'Dealer\'s cards: {} ({})\nYour cards: {} ({})'.format(
+		return 'KonmAI의 패: {} ({})\n{}님의 패: {} ({})'.format(
 		    ', '.join(PlayingCard.str(self.dcards)),
-		    str(PlayingCard.bj_sum(self.dcards)), ', '.join(
-		        PlayingCard.str(self.pcards)),
-		    str(PlayingCard.bj_sum(self.pcards)))
+		    str(PlayingCard.bj_sum(self.dcards)), self.player.name, ', '.join(PlayingCard.str(self.pcards)), str(PlayingCard.bj_sum(self.pcards)))
 
 	def calc_psum(self):
 		self.psum = PlayingCard.bj_sum(self.pcards)
@@ -285,12 +281,6 @@ class Blackjack:
 	def ddraw(self):
 		self.dcards.append(self.deck.draw())
 		self.calc_dsum()
-
-	def win(self):
-		print('* You win!')
-
-	def lose(self):
-		print('* You lose.')
 
 BJ_BLACKJACK_MESSAGES = ['블랙잭!!']
 BJ_HIT_MESSAGES = ['히트!', '히트다 히트!', '한 장 더 뽑을게요.']

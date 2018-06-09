@@ -20,34 +20,40 @@ bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
 cho_quizs = {} # 초성퀴즈 관리
 bj_games = {} # 블랙잭 관리
+lots_games = {} # 제비뽑기 관리
 
 class ChoQuiz:
 	def __init__(self):
 		self.genre = None
-		self.answer = None
 		self.count = None
+		self.answer = None
 		self.score = None
 	
 	@classmethod
 	def find(cls, channel):
 		global cho_quizs
 
-		return cho_quizs[channel] if channel in list(cho_quizs.keys()) else None
+		return cho_quizs[channel] if channel in cho_quizs.keys() else None
+	
 	@classmethod
-	def start(cls, channel):
+	def start(cls, channel, genre, count, answer):
 		global cho_quizs
 
 		cho_quizs[channel] = ChoQuiz()
+		cho_quizs[channel].genre = genre
+		cho_quizs[channel].count = count
+		cho_quizs[channel].answer = answer
 
 		return cho_quizs[channel]
+	
 	@classmethod
 	def end(cls, channel):
-		cho_quiz = cls.find(channel)
-		if cho_quiz is None or cho_quiz.answer is None:
-			result = '진행 중인 초성퀴즈가 없어요.'
-		else:
-			cho_quiz.__init__()
+		global cho_quizs
+		if cho_quizs[channel] is not None:
+			del cho_quizs[channel]
 			result = '초성퀴즈를 종료했어요.'
+		else:
+			result = '진행 중인 초성퀴즈가 없어요.'
 
 		return result
 
@@ -108,36 +114,19 @@ async def on_ready():
 @bot.event
 async def on_message(message):
 	channel = message.channel
+
 	# 초성퀴즈 메시지 처리
 	cho_quiz = ChoQuiz.find(channel)
-	if cho_quiz is not None and cho_quiz.answer is not None:
+	if cho_quiz is not None:
 		if message.content == cho_quiz.answer:
-			await bot.send_message(channel, '**{}**님의 [**{}**] 정답! '.format(message.author.mention, cho_quiz.answer))
+			await bot.send_message(channel, '**{}**님의 [**{}**] 정답! :white_check_mark:'.format(message.author.mention, cho_quiz.answer))
 			cho_quiz.count -= 1
 			if cho_quiz.count > 0:
 				cho_quiz.answer = jaum_quiz(cho_quiz.genre)
 				await bot.send_message(channel, cho(cho_quiz.answer))
 			else:
 				await bot.send_message(channel, ChoQuiz.end(channel))
-	
-	# 블랙잭 메시지 처리
-	if message.author.name in bj_games.keys():
-		player = message.author.name
-		if message.content == '`H':
-			bj_games[player].pdraw()
-			await asyncio.sleep(1.0)
-			await bot.send_message(channel, bj_games[player])
-			if bj_games[player].psum > 21:
-				await asyncio.sleep(0.5)
-				await bot.send_message(channel, random.choice(BJ_BUST_MESSAGES_PLAYER))
-				del bj_games[player]
-			elif bj_games[player].psum == 21:
-				await asyncio.sleep(0.5)
-				await bot.send_message(channel, random.choice(BJ_BLACKJACK_MESSAGES))
-				await blackjack_dturn(player, channel)
-		elif message.content == '`S':
-			await blackjack_dturn(player, channel)
-	
+		
 	await bot.process_commands(message) # 커맨드 처리
 
 # Commands
@@ -151,13 +140,14 @@ async def 도움():
 	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
 	embed.add_field(name='`골라', value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
-	embed.add_field(name='`사전', value='Daum 사전 검색을 대신해 드려요.', inline=True)
+	embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전 검색을 대신해 드려요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
 	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요. 회차를 지정할 수 있어요.', inline=True)
-	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성끝 `을 입력하세요.', inline=True)
-	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (개발중)', inline=True)
+	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (WIP)', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
+	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 끝내려면 ` `제비 끝 `을 입력하세요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -192,7 +182,7 @@ async def 계산(ctx, *args):
 	try:
 		result = ' '.join(args) + ' = ' + str(eval(''.join(args)))
 	except ZeroDivisionError:
-		result = '아무래도 0으로 나눌 수는 없어요.'
+		result = '아무래도 0으로 나눌 수는 없어요. :thinking:'
 	except:
 		result = '알맞은 계산식을 입력해 주세요.'
 	
@@ -206,7 +196,7 @@ async def 계산(ctx, *args):
 async def 골라(ctx, *args):
 	result = random.choice(args)
 
-	await bot.say(ctx.message.author.mention+'님, 저라면 **'+result+'**예요.')
+	await bot.say(ctx.message.author.mention+'님, 저라면 **'+result+'**예요. :thinking:')
 
 @bot.command()
 async def 사전(*args):
@@ -231,6 +221,7 @@ async def 실검():
 	await bot.say(embed=embed)
 @bot.command()
 async def 로또(*args):
+	"""Daum 로또 당첨 번호 검색"""
 	success = True
 	if len(args) > 0:
 		if args[0].isnumeric():
@@ -245,7 +236,7 @@ async def 로또(*args):
 	if success:
 		embed = discord.Embed(description=data[1]+'년 '+data[2]+'월 '+data[3]+'일 추첨', color=THEME_COLOR)
 		embed.set_author(name='로또 추첨 번호 by 다음', url='https://search.daum.net/search?w=tot&q='+data[0]+'%20로또%20당첨%20번호', icon_url=ICON_URL)
-		embed.add_field(name=data[0]+'회', value=bignumrize(' :white_small_square: '.join(data[3:-1])+' :white_medium_small_square: '+data[-1]))
+		embed.add_field(name=data[0], value=bignumrize('  '.join(data[4:-1])+' :small_orange_diamond: '+data[-1]))
 
 		await bot.say(embed=embed)
 	else:
@@ -254,25 +245,26 @@ async def 로또(*args):
 @bot.command(pass_context=True)
 async def 초성(ctx, *args):
 	"""초성퀴즈 (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)"""
-	cho_quiz = ChoQuiz.find(ctx.message.channel)
+	channel = ctx.message.channel
+	cho_quiz = ChoQuiz.find(channel)
 	
-	if cho_quiz is not None and cho_quiz.answer is not None:
-		result = '이미 진행중인 초성퀴즈가 있어요.'
+	if len(args) > 0 and args[0] == '끝':
+			result = ChoQuiz.end(channel)
 	else:
-		cho_quiz = ChoQuiz.start(ctx.message.channel)
-		cho_quiz.genre = args[0] if len(args) > 0 else None
-		cho_quiz.count = int(args[1]) if len(args) > 1 else 10
-		
-		if cho_quiz.genre not in ['영화', '음악', '동식물', '사전', '게임', '인물', '책']:
-			result = '장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책'
-		else: # 정상
-			cho_quiz.answer = jaum_quiz(cho_quiz.genre) # 정답 생성
-			result = cho(cho_quiz.answer)
+		if cho_quiz is not None:
+			result = '이미 진행중인 초성퀴즈가 있어요.'
+		else:
+			genre = args[0] if len(args) > 0 else None
+			count = int(args[1]) if len(args) > 1 else 10
+			
+			if genre not in ['영화', '음악', '동식물', '사전', '게임', '인물', '책']:
+				result = '장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책'
+			else: # 정상
+				answer = jaum_quiz(genre) # 정답 생성
+				cho_quiz = ChoQuiz.start(channel, genre, count, answer)
+				result = cho(answer)
 	
 	await bot.say(result) # 채널에 초성 공개
-@bot.command(pass_context=True)
-async def 초성끝(ctx):
-	await bot.say(ChoQuiz.end(ctx.message.channel))
 
 @bot.command()
 async def 배그(*args):
@@ -324,7 +316,8 @@ async def 소전(*args):
 @bot.command(pass_context=True)
 async def 블랙잭(ctx):
 	global bj_games
-	player = ctx.message.author.name
+	player = ctx.message.author
+
 	if player not in bj_games.keys():
 		bj_games[player] = blackjack(player)
 		await bot.say(bj_games[player])
@@ -333,7 +326,74 @@ async def 블랙잭(ctx):
 			await bot.say(random.choice(BJ_BLACKJACK_MESSAGES))
 			await blackjack_dturn(player, ctx.message.channel)
 	else:
-		await bot.say('이미 진행중인 게임이 있어요.')
+		await bot.say('이미 진행 중인 게임이 있어요.')
+@bot.command(pass_context=True)
+async def H(ctx):
+	player = ctx.message.author
+	channel = ctx.message.channel
+
+	if player in bj_games.keys():
+		bj_games[player].pdraw()
+		await asyncio.sleep(1.0)
+		await bot.say(bj_games[player])
+		if bj_games[player].psum > 21:
+			await asyncio.sleep(0.5)
+			await bot.say(random.choice(BJ_BUST_MESSAGES_PLAYER))
+			del bj_games[player]
+		elif bj_games[player].psum == 21:
+			await asyncio.sleep(0.5)
+			await bot.say(random.choice(BJ_BLACKJACK_MESSAGES))
+			await blackjack_dturn(player, channel)
+	else:
+		await bot.say('진행 중인 게임이 없어요.')
+@bot.command(pass_context=True)
+async def S(ctx):
+	player = ctx.message.author
+	channel = ctx.message.channel
+
+	if player in bj_games.keys():
+		await blackjack_dturn(player, channel)
+	else:
+		await bot.say('진행 중인 게임이 없어요.')
+
+@bot.command(pass_context=True)
+async def 제비(ctx, *args):
+	channel = ctx.message.channel
+
+	if len(args) > 0:
+		if args[0].isnumeric():
+			if channel not in lots_games.keys():
+				lots_games[channel] = [True] + [False] * (int(args[0]) - 1)
+				random.shuffle(lots_games[channel])
+				result = '제비뽑기가 준비됐어요.'
+			else:
+				result = '이미 준비된 제비가 있어요.'
+		elif args[0] == '끝':
+			if channel in lots_games.keys():
+				del lots_games[channel]
+				result = '제비뽑기를 취소했어요.'
+			else:
+				result = '준비된 제비가 없어요.'
+		else:
+			result = '숫자를 입력해 주세요.'
+	else:
+		if channel not in lots_games.keys():
+			result = '제비 개수를 입력해 주세요.'
+		else:
+			lot = lots_games[channel].pop()
+			if lot: del lots_games[channel]
+			result = ctx.message.author.mention+'님, **당첨**! :tada:' if lot else ctx.message.author.mention+'님, 꽝. :smirk:'
+	
+	await bot.say(result)
+
+# Command for DEBUG
+
+@bot.command(pass_context=True)
+async def 채널(ctx):
+	await bot.say([m.name for m in ctx.message.server.members])
+@bot.command(pass_context=True)
+async def 초퀴(ctx):
+	await bot.say(cho_quizs)
 
 # End of commands
 
