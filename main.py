@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 import asyncio
+import datetime
+import json
 import random
 import re
 import time
-import datetime
 
 from funcs import *
 
@@ -15,6 +16,7 @@ PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
 THEME_COLOR = 0x00a0ee
+URL = 'https://discord.gg/E6eXnpJ'
 ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
@@ -137,7 +139,7 @@ async def on_message(message):
 async def 도움():
 	"""ㄴㄱ ㄴㄱㄴㄱ?"""
 	embed = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
-	embed.set_author(name='KonmAI v0.4', url='https://discord.gg/E6eXnpJ', icon_url=ICON_URL)
+	embed.set_author(name='KonmAI v0.5', url=URL, icon_url=ICON_URL)
 	embed.add_field(name='`더해', value='주어진 수들을 덧셈해 드려요. (무료)', inline=True)
 	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
@@ -151,6 +153,7 @@ async def 도움():
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
 	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 끝내려면 ` `제비 끝 `을 입력하세요.', inline=True)
 	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (미완성)', inline=True)
+	embed.add_field(name='`기억', value='키워드에 관한 내용을 기억해드려요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요. (미완성)', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -399,6 +402,7 @@ async def 제비(ctx, *args):
 
 @bot.command(pass_context=True)
 async def 운세(ctx):
+	"""하루 한 번 오미쿠지"""
 	author = ctx.message.author
 	today = datetime.date.today()
 
@@ -410,11 +414,61 @@ async def 운세(ctx):
 	
 	await bot.say(result)
 
+MEMORIZE_MESSAGE = ['기억해둘게요.']
+NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.']
+@bot.command(pass_context=True)
+async def 기억(ctx, *args):
+	"""MEMORY_FILE에 입력값 기억. {key: [id, name, content]}"""
+	MEMORY_FILE = 'memory.dat'
+	
+	try:
+		with open(MEMORY_FILE, 'r') as f:
+			memories = json.loads(f.read())
+			f.close()
+	except:
+		memories = {}
+	
+	if len(args) > 1:
+		author = ctx.message.author
+		if args[0] in memories:
+			mem = memories[args[0]]
+			if author.id in mem:
+				i = mem.index(author.id)
+				memories[args[0]][i] = author.id
+				memories[args[0]][i+1] = author.name
+				memories[args[0]][i+2] = ' '.join(args[1:])
+			else:
+				memories[args[0]] += [author.id, author.name, ' '.join(args[1:])]
+		else:
+			memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
+		
+		with open(MEMORY_FILE, 'w') as f:
+			f.write(json.dumps(memories))
+			f.close()
+		await bot.say(random.choice(MEMORIZE_MESSAGE))
+	elif len(args) == 1:
+		if args[0] in memories:
+			mem = memories[args[0]]
+			contents = []
+			for i in range(0, int(len(mem)/3)):
+				contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
+			desc = '\n'.join(contents)
+			embed = discord.Embed(title=args[0], description=desc, color=THEME_COLOR)
+			embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
+			await bot.say(embed=embed)
+		else:
+			await bot.say(random.choice(NOT_IN_MEMORY_MESSAGE))
+	else:
+		await bot.say('기억해둘 내용이나 기억해낼 내용을 입력해 주세요.')
+
 # Commands for DEBUG
 
-@bot.command()
-async def 오늘운():
-	await bot.say([x.name for x in fortune_users])
+@bot.command(pass_context=True)
+async def ID(ctx):
+	await bot.say(ctx.message.author.id)
+@bot.command(pass_context=True)
+async def GETMEM(ctx, *args):
+	await bot.say(', '.join([m.name for m in [s.get_member(args[0]) for s in bot.servers]]))
 
 # End of commands
 
