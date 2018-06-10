@@ -12,63 +12,16 @@ from funcs import *
 
 TOKEN = '' # SECURE!!!
 
-PREFIX = '`'
-DESCRIPTION = ''
-GAME = '도움말은 `도움'
-THEME_COLOR = 0x00a0ee
-URL = 'https://discord.gg/E6eXnpJ'
-ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
-
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
-cho_quizs = {} # 초성퀴즈 관리
-bj_games = {} # 블랙잭 관리
-lots_games = {} # 제비뽑기 관리
-fortune_users = {} # 운세 관리
-
-class ChoQuiz:
-	def __init__(self):
-		self.genre = None
-		self.count = None
-		self.answer = None
-		self.score = None
-	
-	@classmethod
-	def find(cls, channel):
-		global cho_quizs
-
-		return cho_quizs[channel] if channel in cho_quizs.keys() else None
-	
-	@classmethod
-	def start(cls, channel, genre, count, answer):
-		global cho_quizs
-
-		cho_quizs[channel] = ChoQuiz()
-		cho_quizs[channel].genre = genre
-		cho_quizs[channel].count = count
-		cho_quizs[channel].answer = answer
-
-		return cho_quizs[channel]
-	
-	@classmethod
-	def end(cls, channel):
-		global cho_quizs
-		if cho_quizs[channel] is not None:
-			del cho_quizs[channel]
-			result = '초성퀴즈를 종료했어요.'
-		else:
-			result = '진행 중인 초성퀴즈가 없어요.'
-
-		return result
-
-async def blackjack_dturn(player, channel):
+async def blackjack_dturn(player, channel): # Dealer's turn
 	while True:
 		if bj_games[player].dsum < 17: # 딜러 히트
 			await asyncio.sleep(1.0)
 			if bj_games[player].cnt_dhit > 0:
-				await bot.send_message(channel, random.choice(BJ_HIT_MESSAGES + BJ_HIT_MESSAGES_MORE))
+				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_MORE))
 			else:
-				await bot.send_message(channel, random.choice(BJ_HIT_MESSAGES + BJ_HIT_MESSAGES_FIRST))
+				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
 			bj_games[player].cnt_dhit += 1
 			bj_games[player].ddraw()
 			await asyncio.sleep(1.0)
@@ -76,7 +29,7 @@ async def blackjack_dturn(player, channel):
 				await asyncio.sleep(1.0)
 				await bot.send_message(channel, bj_games[player].result())
 				await asyncio.sleep(0.5)
-				await bot.send_message(channel, random.choice(BJ_BUST_MESSAGES_DEALER))
+				await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
 				del bj_games[player]
 				break
 			else:
@@ -84,20 +37,20 @@ async def blackjack_dturn(player, channel):
 		else: # 딜러 스탠드
 			await asyncio.sleep(1.0)
 			if bj_games[player].cnt_dhit > 0:
-				await bot.send_message(channel, random.choice(BJ_STAND_MESSAGES + BJ_STAND_MESSAGES_HIT))
+				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_HIT))
 			else:
-				await bot.send_message(channel, random.choice(BJ_STAND_MESSAGES + BJ_STAND_MESSAGES_NOHIT))
+				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_NOHIT))
 			break
 	if player in bj_games.keys():
 		await asyncio.sleep(1.0)
 		await bot.send_message(channel, bj_games[player].result())
 		await asyncio.sleep(1.0)
 		if bj_games[player].psum > bj_games[player].dsum:
-			await bot.send_message(channel, random.choice(BJ_WIN_MESSAGES_PLAYER))
+			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_PLAYER))
 		elif bj_games[player].psum < bj_games[player].dsum:
-			await bot.send_message(channel, random.choice(BJ_WIN_MESSAGES_DEALER))
+			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
 		else:
-			await bot.send_message(channel, random.choice(BJ_DRAW_MESSAGES))
+			await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
 		del bj_games[player]
 
 # Events
@@ -124,12 +77,8 @@ async def on_message(message):
 	if cho_quiz is not None:
 		if message.content == cho_quiz.answer:
 			await bot.send_message(channel, '**{}**님의 [**{}**] 정답! :white_check_mark:'.format(message.author.mention, cho_quiz.answer))
-			cho_quiz.count -= 1
-			if cho_quiz.count > 0:
-				cho_quiz.answer = jaum_quiz(cho_quiz.genre)
-				await bot.send_message(channel, cho(cho_quiz.answer))
-			else:
-				await bot.send_message(channel, ChoQuiz.end(channel))
+			result = cho_quiz.correct(channel)
+			await bot.send_message(channel, result)
 		
 	await bot.process_commands(message) # 커맨드 처리
 
@@ -147,13 +96,13 @@ async def 도움():
 	embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전 검색을 대신해 드려요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
 	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요. 회차를 지정할 수 있어요.', inline=True)
-	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
 	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (미완성)', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
 	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 끝내려면 ` `제비 끝 `을 입력하세요.', inline=True)
 	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (미완성)', inline=True)
-	embed.add_field(name='`기억', value='키워드에 관한 내용을 기억해드려요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요. (미완성)', inline=True)
+	embed.add_field(name='`기억', value='키워드에 관한 내용을 기억해드려요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -263,7 +212,9 @@ async def 초성(ctx, *args):
 	cho_quiz = ChoQuiz.find(channel)
 	
 	if len(args) > 0 and args[0] == '끝':
-			result = ChoQuiz.end(channel)
+		result = ChoQuiz.end(channel)
+	elif len(args) > 0 and args[0] == '등록': # 사용자 초성퀴즈 등록
+		result = ChoQuiz.add_custom(ctx.message.author, args[1:])
 	else:
 		if cho_quiz is not None:
 			result = '이미 진행중인 초성퀴즈가 있어요.'
@@ -276,9 +227,9 @@ async def 초성(ctx, *args):
 			else: # OK
 				answer = jaum_quiz(genre) # 정답 생성
 				cho_quiz = ChoQuiz.start(channel, genre, count, answer)
-				result = cho(answer)
+				result = cho(answer) # 초성 공개
 	
-	await bot.say(result) # 채널에 초성 공개
+	await bot.say(result)
 
 @bot.command()
 async def 배그(*args):
@@ -323,7 +274,7 @@ async def 소전(*args):
 		if len(args[0]) in [4, 5]:
 			pd_time = args[0]
 
-			await bot.say('제조시간이 '+pd_time+'인 전술인형: '+', '.join(gf_times(pd_time)))
+			await bot.say(gf_times(pd_time))
 	else:
 		await bot.say('제조시간을 입력해 주세요.')
 
@@ -333,11 +284,11 @@ async def 블랙잭(ctx):
 	player = ctx.message.author
 
 	if player not in bj_games.keys():
-		bj_games[player] = blackjack(player)
+		bj_games[player] = Blackjack(player)
 		await bot.say(bj_games[player])
 		if bj_games[player].psum == 21:
 			await asyncio.sleep(0.5)
-			await bot.say(random.choice(BJ_BLACKJACK_MESSAGES))
+			await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
 			await blackjack_dturn(player, ctx.message.channel)
 	else:
 		await bot.say('이미 진행 중인 게임이 있어요.')
@@ -352,11 +303,11 @@ async def H(ctx):
 		await bot.say(bj_games[player])
 		if bj_games[player].psum > 21:
 			await asyncio.sleep(0.5)
-			await bot.say(random.choice(BJ_BUST_MESSAGES_PLAYER))
+			await bot.say(random.choice(Blackjack.BUST_MESSAGES_PLAYER))
 			del bj_games[player]
 		elif bj_games[player].psum == 21:
 			await asyncio.sleep(0.5)
-			await bot.say(random.choice(BJ_BLACKJACK_MESSAGES))
+			await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
 			await blackjack_dturn(player, channel)
 	else:
 		await bot.say('진행 중인 게임이 없어요.')
@@ -403,72 +354,35 @@ async def 제비(ctx, *args):
 @bot.command(pass_context=True)
 async def 운세(ctx):
 	"""하루 한 번 오미쿠지"""
-	author = ctx.message.author
-	today = datetime.date.today()
-
-	if author not in fortune_users.keys() or (today - fortune_users[author]).days > 0:
-		fortune_users[author] = today
-		result = random.choice(FORTUNES)
-	else:
-		result = '오늘은 이미 오미쿠지를 뽑았어요.'
 	
+	author = ctx.message.author
+	result = fortune(author)
+
 	await bot.say(result)
 
-MEMORIZE_MESSAGE = ['기억해둘게요.']
-NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.']
 @bot.command(pass_context=True)
 async def 기억(ctx, *args):
-	"""MEMORY_FILE에 입력값 기억. {key: [id, name, content]}"""
-	MEMORY_FILE = 'memory.dat'
-	
-	try:
-		with open(MEMORY_FILE, 'r') as f:
-			memories = json.loads(f.read())
-			f.close()
-	except:
-		memories = {}
-	
-	if len(args) > 1:
-		author = ctx.message.author
-		if args[0] in memories:
-			mem = memories[args[0]]
-			if author.id in mem:
-				i = mem.index(author.id)
-				memories[args[0]][i] = author.id
-				memories[args[0]][i+1] = author.name
-				memories[args[0]][i+2] = ' '.join(args[1:])
-			else:
-				memories[args[0]] += [author.id, author.name, ' '.join(args[1:])]
-		else:
-			memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
-		
-		with open(MEMORY_FILE, 'w') as f:
-			f.write(json.dumps(memories))
-			f.close()
-		await bot.say(random.choice(MEMORIZE_MESSAGE))
-	elif len(args) == 1:
-		if args[0] in memories:
-			mem = memories[args[0]]
-			contents = []
-			for i in range(0, int(len(mem)/3)):
-				contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
-			desc = '\n'.join(contents)
-			embed = discord.Embed(title=args[0], description=desc, color=THEME_COLOR)
-			embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
-			await bot.say(embed=embed)
-		else:
-			await bot.say(random.choice(NOT_IN_MEMORY_MESSAGE))
-	else:
-		await bot.say('기억해둘 내용이나 기억해낼 내용을 입력해 주세요.')
+	"""MEMORY_FILE에 입력값 기억."""
+	result = memory(ctx.message.author, *args)
+
+	if type(result) is str:
+		await bot.say(result)
+	else: # embed
+		await bot.say(embed=result)
 
 # Commands for DEBUG
 
 @bot.command(pass_context=True)
 async def ID(ctx):
 	await bot.say(ctx.message.author.id)
-@bot.command(pass_context=True)
-async def GETMEM(ctx, *args):
+@bot.command()
+async def GETMEM(*args):
 	await bot.say(', '.join([m.name for m in [s.get_member(args[0]) for s in bot.servers]]))
+@bot.command()
+async def CUSCHO():
+	with open(CUSTOM_CHO_QUIZ_FILE, 'r') as f:
+		result = f.read()
+	await bot.say(result)
 
 # End of commands
 
