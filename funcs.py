@@ -16,15 +16,30 @@ THEME_COLOR = 0x00a0ee
 URL = 'https://discord.gg/E6eXnpJ'
 ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
-CUSTOM_CHO_QUIZ_FILE = 'custom_cho_quiz.dat'
-MEMORY_FILE = 'memory.dat'
+CUSTOM_CHO_QUIZ_FILE = 'custom_cho_quiz.json'
+MEMORY_FILE = 'memory.json'
+PLAYER_FILE = 'player.json'
 
 cho_quizs = {} # 초성퀴즈 관리
 bj_games = {} # 블랙잭 관리
 lots_games = {} # 제비뽑기 관리
 fortune_users = {} # 운세 관리
 
-def korea_time_string():
+def read_json(address):
+	try:
+		with open(address, 'r') as f:
+			ret = json.loads(f.read())
+			f.close()
+	except: # 파일이나 파일 내용이 없는 경우
+		ret = {}
+	
+	return ret
+def write_json(address, dic):
+	with open(address, 'w') as f:
+		f.write(json.dumps(dic))
+		f.close()
+
+def korea_time_string(): # TODO: 없애버리기
 	"""(REPL.IT 전용) UTC를 한국 시간으로 변환"""
 	tm = time.gmtime()
 	tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
@@ -155,19 +170,20 @@ def jaum_quiz(genre=None):
 	return answer
 
 def josa(word, j):
-	if j in ['은', '는', '이', '가', '을', '를', '으로', '로']:
-		last_char = word[-1]
-		has_jong = True if (ord(last_char) - BASE) % 28 > 0 else False
-		if j in ['은', '는']:
-			return '은' if has_jong else '는'
-		elif j in ['이', '가']:
-			return '이' if has_jong else '가'
-		elif j in ['을', '를']:
-			return '을' if has_jong else '를'
-		elif j in ['으로', '로']:
-			return '으로' if has_jong else '로'
-		else:
-			raise Exception('josa 함수에 잘못된 인수 전달.')
+	last_char = word[-1]
+	has_jong = True if (ord(last_char) - BASE) % 28 > 0 else False
+	if j in ['은', '는']:
+		return '은' if has_jong else '는'
+	elif j in ['이', '가']:
+		return '이' if has_jong else '가'
+	elif j in ['을', '를']:
+		return '을' if has_jong else '를'
+	elif j in ['으로', '로']:
+		return '으로' if has_jong else '로'
+	elif j in ['과', '와']:
+		return '과' if has_jong else '와'
+	else:
+		raise Exception('josa 함수에 잘못된 인수 전달.')
 
 class ChoQuiz:
 	def __init__(self):
@@ -210,12 +226,7 @@ class ChoQuiz:
 		print(author)
 		print(args)
 		if len(args) > 1:
-			try:
-				with open(CUSTOM_CHO_QUIZ_FILE, 'r') as f:
-					quizs = json.loads(f.read())
-					f.close()
-			except: # 파일이나 파일 내용이 없는 경우
-				quizs = {}
+			quizs = read_json(CUSTOM_CHO_QUIZ_FILE)
 			
 			if args[0] in quizs: # 이미 등록된 정답
 				mem = quizs[args[0]]
@@ -228,9 +239,7 @@ class ChoQuiz:
 				quizs[args[0]] = [author.id, author.name, ' '.join(args[1:])]
 				ret = '새로운 초성퀴즈를 등록했어요.'
 			
-			with open(CUSTOM_CHO_QUIZ_FILE, 'w') as f:
-				f.write(json.dumps(quizs))
-				f.close()
+			write_json(CUSTOM_CHO_QUIZ_FILE, quizs)
 			return ret
 		else:
 			return '` `초성 등록 정답 설명 `처럼 입력해 주세요.'
@@ -305,6 +314,66 @@ def gf_times(pd_time):
 		pd_time = pd_time[0:2] + ':' + pd_time[2:4]
 	
 	return '제조시간이 **'+pd_time+'**인 전술인형: '+', '.join(GF_TIMES[pd_time])
+
+class Player:
+
+	@classmethod
+	def init(cls, id):
+		players = read_json(PLAYER_FILE)
+		
+		if id not in players:
+			players[id] = {}
+			players[id]['coin'] = 100
+			write_json(PLAYER_FILE, players)
+			ret = '플레이어 등록을 완료했어요.'
+		else:
+			ret = '이미 등록되어 있어요.'
+		
+		return ret
+	
+	@classmethod
+	def info(cls, id):
+		players = read_json(PLAYER_FILE)
+
+		if id in players:
+			ret = str(players[id]['coin'])
+		else:
+			ret = '등록되지 않은 플레이어예요.'
+		
+		return ret
+
+	@classmethod
+	def reset_coin(cls, id):
+		players = read_json(PLAYER_FILE)
+
+		if id in players:
+			players[id]['coin'] = 100
+			write_json(PLAYER_FILE, players)
+			ret = '코인을 초기화했어요.'
+		else:
+			ret = '등록되지 않은 플레이어예요.'
+		
+		return ret
+	
+	@classmethod
+	def transfer_coin(cls, from_id, to_id, amount):
+		players = read_json(PLAYER_FILE)
+
+		if from_id in players:
+			if to_id in players:
+				if players[from_id]['coin'] >= amount+100:
+					players[from_id]['coin'] -= amount
+					players[to_id]['coin'] += amount
+					write_json(PLAYER_FILE, players)
+					ret = '이체를 완료했어요.'
+				else:
+					ret = '잔액이 부족해요.'
+			else:
+				ret = '받는 플레이어를 찾지 못했어요.'
+		else:
+			ret = '등록되지 않은 플레이어예요.'
+		
+		return ret
 
 class PlayingCard:
 	
@@ -435,12 +504,7 @@ def memory(author, *args): # `기억
 	MEMORIZE_MESSAGE = ['기억해둘게요.']
 	NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.', '까먹었나...? 기억에 없어요.']
 	
-	try:
-		with open(MEMORY_FILE, 'r') as f:
-			memories = json.loads(f.read())
-			f.close()
-	except: # 파일이나 파일 내용이 없는 경우
-		memories = {}
+	memories = read_json(MEMORY_FILE)
 	
 	if len(args) > 1:
 		if args[0] in memories: # 키워드에 대한 기억 존재
@@ -455,9 +519,7 @@ def memory(author, *args): # `기억
 		else: # 새로운 키워드
 			memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
 		
-		with open(MEMORY_FILE, 'w') as f:
-			f.write(json.dumps(memories))
-			f.close()
+		write_json(MEMORY_FILE, memories)
 		return random.choice(MEMORIZE_MESSAGE)
 	elif len(args) == 1:
 		if args[0] in memories:

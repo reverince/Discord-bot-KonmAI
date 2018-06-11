@@ -30,6 +30,7 @@ async def blackjack_dturn(player, channel): # Dealer's turn
 				await bot.send_message(channel, bj_games[player].result())
 				await asyncio.sleep(0.5)
 				await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
+				await bot.change_presence(game=discord.Game(name=GAME))
 				del bj_games[player]
 				break
 			else:
@@ -51,15 +52,16 @@ async def blackjack_dturn(player, channel): # Dealer's turn
 			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
 		else:
 			await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
+		await bot.change_presence(game=discord.Game(name=GAME))
 		del bj_games[player]
 
 # Events
 
 @bot.event
 async def on_ready():
-	server_names = [x.name for x in bot.servers]
-	member_names = [x.name for x in set(bot.get_all_members())]
-	member_names.remove('KonmAI')
+	server_names = [s.name for s in bot.servers]
+	member_names = [m.name for m in set(bot.get_all_members())]
+	#member_names.remove('KonmAI')
 	print(bot.user.name+' 온라인. ( ID : '+bot.user.id+' )')
 	print('Discord.py 버전 : '+discord.__version__)
 	print('연결된 서버 '+str(len(bot.servers))+'개 : '+', '.join(server_names))
@@ -95,12 +97,12 @@ async def 도움():
 	embed.add_field(name='`골라', value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
 	embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전 검색을 대신해 드려요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
-	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요. 회차를 지정할 수 있어요.', inline=True)
+	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
 	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (미완성)', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
-	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 끝내려면 ` `제비 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
 	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (미완성)', inline=True)
 	embed.add_field(name='`기억', value='키워드에 관한 내용을 기억해드려요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.', inline=True)
 
@@ -279,12 +281,51 @@ async def 소전(*args):
 		await bot.say('제조시간을 입력해 주세요.')
 
 @bot.command(pass_context=True)
+async def 플레이어(ctx, *args):
+	"""플레이어 데이터 관련 업무"""
+	author = ctx.message.author
+
+	if len(args) > 0:
+		if args[0] == '등록':
+			result = Player.init(author.id)
+		elif args[0] == '나':
+			result = Player.info(author.id)
+		else:
+			result = '그런 명령어는 없어요.'
+	else:
+		result = '어떤 일을 할까요?'
+	
+	await bot.say(author.mention+'님, '+result)
+@bot.command(pass_context=True)
+async def 코인(ctx, *args):
+	"""플레이어 코인 데이터 관련 업무"""
+	author = ctx.message.author
+
+	if len(args) > 0:
+		if args[0] == '초기화':
+			result = Player.reset_coin(author.id)
+		elif args[0] == '이체':
+			if len(args) == 3:
+				to_id = args[1]
+				amount = int(args[2])
+				result = Player.transfer_coin(author.id, to_id, amount)
+			else:
+				result = '` `코인 이체 [상대방] [금액] `처럼 입력해 주세요.'
+		else:
+			result = '그런 명령어는 없어요.'
+	else:
+		result = '어떤 일을 할까요?'
+	
+	await bot.say(author.mention+'님, '+result)
+
+@bot.command(pass_context=True)
 async def 블랙잭(ctx):
 	global bj_games
 	player = ctx.message.author
 
 	if player not in bj_games.keys():
 		bj_games[player] = Blackjack(player)
+		await bot.change_presence(game=discord.Game(name=player.name+josa(player.name,'과')+' 블랙잭'))
 		await bot.say(bj_games[player])
 		if bj_games[player].psum == 21:
 			await asyncio.sleep(0.5)
@@ -372,8 +413,11 @@ async def 기억(ctx, *args):
 
 # Commands for DEBUG
 
+@bot.command()
+async def SERVER():
+	await bot.say([s.name for s in bot.servers])
 @bot.command(pass_context=True)
-async def ID(ctx):
+async def MYID(ctx):
 	await bot.say(ctx.message.author.id)
 @bot.command()
 async def GETMEM(*args):
