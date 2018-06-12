@@ -90,21 +90,24 @@ async def on_message(message):
 async def 도움():
 	"""ㄴㄱ ㄴㄱㄴㄱ?"""
 	embed = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
-	embed.set_author(name='KonmAI v0.5', url=URL, icon_url=ICON_URL)
+	embed.set_author(name=NAME, url=URL, icon_url=ICON_URL)
 	embed.add_field(name='`더해', value='주어진 수들을 덧셈해 드려요. (무료)', inline=True)
-	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해 드려요.', inline=True)
+	embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해요.', inline=True)
 	embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
 	embed.add_field(name='`골라', value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
-	embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전 검색을 대신해 드려요.', inline=True)
+	embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전에서 검색해요.', inline=True)
 	embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
-	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해 드려요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
+	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
-	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아 드려요.\n` `배그 KonmAI `처럼 사용하세요. (미완성)', inline=True)
+	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요. (WIP))', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
+	embed.add_field(name='`게이머', value='게이머 관련 업무를 수행해요. (WIP)', inline=True)
+	embed.add_field(name='`코인', value='게이머 코인 관련 업무를 수행해요. (WIP)', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
-	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해 드려요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요. 취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
-	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (미완성)', inline=True)
-	embed.add_field(name='`기억', value='키워드에 관한 내용을 기억해드려요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.', inline=True)
+	embed.add_field(name='`주사위', value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
+	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (WIP)', inline=True)
+	embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -177,9 +180,10 @@ async def 실검():
 	"""Daum 실시간 검색어 순위"""
 	ranks = daum_realtime()
 	link = 'https://search.daum.net/search?w=tot&q='
-	time = korea_time_string()
+	tm = time.gmtime()
+	tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
 
-	embed=discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=time+' 기준', color=THEME_COLOR)
+	embed=discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=tm_str+' 기준', color=THEME_COLOR)
 	for i in range(0, 10):
 		embed.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
 	
@@ -281,15 +285,15 @@ async def 소전(*args):
 		await bot.say('제조시간을 입력해 주세요.')
 
 @bot.command(pass_context=True)
-async def 플레이어(ctx, *args):
-	"""플레이어 데이터 관련 업무"""
+async def 게이머(ctx, *args):
+	"""게이머 데이터 관련 업무"""
 	author = ctx.message.author
 
 	if len(args) > 0:
 		if args[0] == '등록':
-			result = Player.init(author.id)
+			result = Gamer.init(author.id)
 		elif args[0] == '나':
-			result = Player.info(author.id)
+			result = Gamer.info(author.id)
 		else:
 			result = '그런 명령어는 없어요.'
 	else:
@@ -303,12 +307,12 @@ async def 코인(ctx, *args):
 
 	if len(args) > 0:
 		if args[0] == '초기화':
-			result = Player.reset_coin(author.id)
+			result = Gamer.reset_coin(author.id)
 		elif args[0] == '이체':
 			if len(args) == 3:
 				to_id = args[1]
 				amount = int(args[2])
-				result = Player.transfer_coin(author.id, to_id, amount)
+				result = Gamer.transfer_coin(author.id, to_id, amount)
 			else:
 				result = '` `코인 이체 [상대방] [금액] `처럼 입력해 주세요.'
 		else:
@@ -361,6 +365,22 @@ async def S(ctx):
 		await blackjack_dturn(player, channel)
 	else:
 		await bot.say('진행 중인 게임이 없어요.')
+
+@bot.command(pass_context=True)
+async def 주사위(ctx, *args):
+	try:
+		if len(args) > 0:
+			cnt, side = [int(x) for x in args[0].split('d')]
+		else: # 2d6
+			cnt, side = 2, 6
+		
+		result = []
+		for _ in range(cnt):
+			result.append(str(random.randint(1, side)))
+		
+		await bot.say(ctx.message.author.mention+'님의 '+str(cnt)+'d'+str(side)+' 주사위 결과 : '+', '.join(result)+' ('+str(sum([int(x) for x in result]))+')')
+	except ValueError:
+		await bot.say('` `주사위 2d6 `처럼 입력해 주세요. 2는 주사위 개수, 6은 주사위 면수예요.')
 
 @bot.command(pass_context=True)
 async def 제비(ctx, *args):
