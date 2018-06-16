@@ -47,7 +47,7 @@ def bignumrize(numstr):
 	return ret
 
 def daum_search(keyword):
-	page = requests.get('http://dic.daum.net/search.do?q=' + keyword)
+	page = requests.get('http://dic.daum.net/search.do?q='+keyword)
 	tree = html.fromstring(page.content)
 
 	ret = ''
@@ -103,6 +103,25 @@ def daum_lotto(inning=''):
 		ret.insert(0, inning[0])
 
 	return ret
+
+def daum_exchange(keyword):
+	page = requests.get('https://search.daum.net/search?w=tot&q='+keyword)
+	tree = html.fromstring(page.content)
+
+	word = tree.xpath('//div[@class="stock_up inner_price"]/em//text()')
+	if len(word) == 0:
+		return None
+	rate = float(word[0])
+	amount_match = re.match(r'\d+', keyword)
+	if amount_match:
+		amount = int(amount_match.group(0))
+	else:
+		amount = 1
+	currency = re.search(r'[가-힣]+', keyword).group(0)
+	if amount_match and currency in ('엔', '엔화'):
+		rate /= 100
+
+	return round(amount * rate, 2)
 
 BASE, CHO, JUNG = 44032, 588, 28
 CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
@@ -186,14 +205,14 @@ class ChoQuiz:
 		self.answer = None
 		self.score = None
 	
-	@classmethod
-	def find(cls, channel):
+	@staticmethod
+	def find(channel):
 		global cho_quizs
 
 		return cho_quizs[channel] if channel in cho_quizs.keys() else None
 	
-	@classmethod
-	def start(cls, channel, genre, count, answer):
+	@staticmethod
+	def start(channel, genre, count, answer):
 		global cho_quizs
 
 		cho_quizs[channel] = ChoQuiz()
@@ -203,8 +222,8 @@ class ChoQuiz:
 
 		return cho_quizs[channel]
 	
-	@classmethod
-	def end(cls, channel):
+	@staticmethod
+	def end(channel):
 		global cho_quizs
 		if cho_quizs[channel] is not None:
 			del cho_quizs[channel]
@@ -214,8 +233,8 @@ class ChoQuiz:
 
 		return ret
 	
-	@classmethod
-	def add_custom(cls, author, args):
+	@staticmethod
+	def add_custom(author, args):
 		"""args: ['정답', '설', '명', ...], quizs: {'정답': ['id', 'name', '설명']}"""
 		print(author)
 		print(args)
@@ -311,8 +330,8 @@ def gf_times(pd_time):
 
 class Gamer:
 
-	@classmethod
-	def init(cls, id):
+	@staticmethod
+	def init(id):
 		gamers = read_json(GAMER_FILE)
 		
 		if id not in gamers:
@@ -325,8 +344,8 @@ class Gamer:
 		
 		return ret
 	
-	@classmethod
-	def info(cls, id):
+	@staticmethod
+	def info(id):
 		gamers = read_json(GAMER_FILE)
 
 		if id in gamers:
@@ -336,8 +355,8 @@ class Gamer:
 		
 		return ret
 
-	@classmethod
-	def reset_coin(cls, id):
+	@staticmethod
+	def reset_coin(id):
 		gamers = read_json(GAMER_FILE)
 
 		if id in gamers:
@@ -349,8 +368,8 @@ class Gamer:
 		
 		return ret
 	
-	@classmethod
-	def transfer_coin(cls, from_id, to_id, amount):
+	@staticmethod
+	def transfer_coin(from_id, to_id, amount):
 		gamers = read_json(GAMER_FILE)
 
 		if from_id in gamers:
@@ -382,12 +401,12 @@ class PlayingCard:
 	def __str__(self):
 		return self.suit + self.number
 
-	@classmethod
-	def str(cls, cards):
+	@staticmethod
+	def str(cards):
 		return [str(card) for card in cards]
 
-	@classmethod
-	def bj_sum(cls, cards):
+	@staticmethod
+	def bj_sum(cards):
 		ret = sum(card.value for card in cards)
 		cnt_a = list(map(lambda x: x.number, cards)).count('A')
 		ret += cnt_a * 10
@@ -453,8 +472,8 @@ class Blackjack:
 		    ', '.join(PlayingCard.str(self.dcards)),
 		    str(PlayingCard.bj_sum(self.dcards)), self.player.name, ', '.join(PlayingCard.str(self.pcards)), str(PlayingCard.bj_sum(self.pcards)))
 
-	@classmethod
-	def sum(cls, cards):
+	@staticmethod
+	def sum(cards):
 		ret = sum(card.value for card in cards)
 		cnt_a = list(map(lambda x: x.number, cards)).count('A')
 		ret += cnt_a * 10
