@@ -100,15 +100,15 @@ async def 도움():
 	embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
 	embed.add_field(name='`환율', value='Daum에서 환율을 검색해요.', inline=True)
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
-	embed.add_field(name='`배그', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요. (WIP))', inline=True)
+	embed.add_field(name='`배그 (WIP)', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
-	embed.add_field(name='`게이머', value='게이머 관련 업무를 수행해요. (WIP)', inline=True)
-	embed.add_field(name='`코인', value='게이머 코인 관련 업무를 수행해요. (WIP)', inline=True)
+	embed.add_field(name='`게이머 (WIP)', value='게이머 관련 업무를 수행해요.', inline=True)
+	embed.add_field(name='`코인 (WIP)', value='게이머 코인 관련 업무를 수행해요.', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.', inline=True)
 	embed.add_field(name='`주사위', value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
 	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
-	embed.add_field(name='`운세', value='오늘의 운세를 점쳐볼 수 있어요. (WIP)', inline=True)
-	embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.', inline=True)
+	embed.add_field(name='`운세 (WIP)', value='오늘의 운세를 점쳐볼 수 있어요.', inline=True)
+	embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -393,6 +393,10 @@ async def 주사위(ctx, *args):
 		for _ in range(cnt):
 			result.append(str(random.randint(1, side)))
 		
+		try:
+			await bot.delete_message(ctx.message)
+		except:
+			pass
 		await bot.say(ctx.message.author.mention+'님의 '+str(cnt)+'d'+str(side)+' 주사위 결과 : '+', '.join(result)+' ('+str(sum([int(x) for x in result]))+')')
 	except ValueError:
 		await bot.say('` `주사위 2d6 `처럼 입력해 주세요. 2는 주사위 개수, 6은 주사위 면수예요.')
@@ -448,19 +452,20 @@ async def 기억(ctx, *args):
 
 # Commands for DEBUG
 
-@bot.command()
-async def SERVER():
-	await bot.say([s.name for s in bot.servers])
 @bot.command(pass_context=True)
 async def MYID(ctx):
 	await bot.say(ctx.message.author.id)
 @bot.command()
-async def GETMEM(*args):
+async def MEM(*args):
 	await bot.say(', '.join([m.name for m in [s.get_member(args[0]) for s in bot.servers]]))
-@bot.command()
-async def CUSCHO():
-	with open(CUSTOM_CHO_QUIZ_FILE, 'r') as f:
-		result = f.read()
+@bot.command(pass_context=True)
+async def LOG(ctx):
+	channel = ctx.message.channel
+	result = []
+	async for message in bot.logs_from(channel, limit=10):
+		if message.author == ctx.message.author:
+			result.append(message.content)
+	result = '\n'.join(result[::-1])
 	await bot.say(result)
 
 # End of commands

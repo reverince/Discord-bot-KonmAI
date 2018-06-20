@@ -547,12 +547,19 @@ def memory(author, *args): # `기억
 	elif len(args) == 1:
 		if args[0] == '삭제':
 			return '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
-		elif args[0] in memories:
-			mem = memories[args[0]]
+		elif args[0] in memories or args[0] == '랜덤':
+			if args[0] == '랜덤' and len(memories) > 0:
+				key = random.choice(list(memories.keys()))
+			elif args[0] in memories:
+				key = args[0]
+			else:
+				return '기억이 하나도 없어요.'
+			
+			mem = memories[key]
 			contents = []
 			for i in range(0, len(mem)//3):
 				contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
-			embed = discord.Embed(title=args[0], description='\n'.join(contents), color=THEME_COLOR)
+			embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
 			embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
 			return embed
 		else:
