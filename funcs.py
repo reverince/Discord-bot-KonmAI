@@ -35,10 +35,27 @@ def read_json(address):
 		ret = {}
 	
 	return ret
+
 def write_json(address, dic):
 	with open(address, 'w') as f:
 		f.write(json.dumps(dic))
 		f.close()
+
+def find_id_by_name(name):
+	members = list(bot.get_all_members())
+	member_names = list(map(lambda x: x.name, members))
+	if target in member_names:
+		i = member_names.index(target)
+		return members[i].id
+	else:
+		return None
+
+def find_name_by_id(id):
+	member = [s.get_member(id) for s in bot.servers][0]
+	if member is not None:
+		return member.name
+	else:
+		return None
 
 def bignumrize(numstr):
 	"""Discord 이모지로 숫자 강조"""
@@ -338,7 +355,7 @@ class Gamer:
 			gamers[id] = {}
 			gamers[id]['coin'] = 100
 			write_json(GAMER_FILE, gamers)
-			ret = '플레이어 등록을 완료했어요.'
+			ret = '게이머 등록을 완료했어요.'
 		else:
 			ret = '이미 등록되어 있어요.'
 		
@@ -349,9 +366,9 @@ class Gamer:
 		gamers = read_json(GAMER_FILE)
 
 		if id in gamers:
-			ret = str(gamers[id]['coin'])
+			ret = '계좌에 '+str(gamers[id]['coin'])+'코인이 있어요.'
 		else:
-			ret = '등록되지 않은 플레이어예요.'
+			ret = '등록되지 않은 게이머예요.'
 		
 		return ret
 
@@ -364,8 +381,47 @@ class Gamer:
 			write_json(GAMER_FILE, gamers)
 			ret = '코인을 초기화했어요.'
 		else:
-			ret = '등록되지 않은 플레이어예요.'
+			ret = '등록되지 않은 게이머예요.'
 		
+		return ret
+	
+	@staticmethod
+	def check_coin(id, amount):
+		gamers = read_json(GAMER_FILE)
+
+		if id in gamers:
+			if gamers[id]['coin'] >= amount:
+				return True
+		
+		return False
+
+	@staticmethod
+	def add_coin(id, amount):
+		gamers = read_json(GAMER_FILE)
+
+		if id in gamers:
+			gamers[id]['coin'] += amount
+			write_json(GAMER_FILE, gamers)
+			ret = str(amount)+'코인 이체를 완료했어요.'
+		else:
+			ret = '등록되지 않은 게이머예요.'
+
+		return ret
+	
+	@staticmethod
+	def remove_coin(id, amount):
+		gamers = read_json(GAMER_FILE)
+
+		if id in gamers:
+			if gamers[id]['coin'] >= amount:
+				gamers[id]['coin'] -= amount
+				write_json(GAMER_FILE, gamers)
+				ret = str(amount)+'코인 이체를 완료했어요.'
+			else:
+				raise Exception('[!] 게이머 잔액 부족')
+		else:
+			raise Exception('[!] 등록되지 않은 게이머')
+
 		return ret
 	
 	@staticmethod
@@ -382,9 +438,9 @@ class Gamer:
 				else:
 					ret = '잔액이 부족해요. 잔고가 100코인 이상 남아야 해요.'
 			else:
-				ret = '받는 플레이어를 찾지 못했어요.'
+				ret = '받는 게이머를 찾지 못했어요.'
 		else:
-			ret = '등록되지 않은 플레이어예요.'
+			ret = '등록되지 않은 게이머예요.'
 		
 		return ret
 
@@ -452,8 +508,9 @@ class Blackjack:
 	WIN_MESSAGES_DEALER = ['제가 이겼어요!', '저의 승리예요!', '특이점은 온다!']
 	DRAW_MESSAGES = ['비겼네요.', '무승부예요.', '무승부! 한 판 더 하실래요?']
 
-	def __init__(self, player):
+	def __init__(self, player, bet=None):
 		self.player = player
+		self.bet = bet
 		self.cnt_dhit = 0
 		self.deck = Deck()
 		self.deck.shuffle()
@@ -490,13 +547,25 @@ class Blackjack:
 	def calc_dsum(self):
 		self.dsum = Blackjack.sum(self.dcards)
 
-	def pdraw(self):
+	def p_draw(self):
 		self.pcards.append(self.deck.draw())
 		self.calc_psum()
 
-	def ddraw(self):
+	def d_draw(self):
 		self.dcards.append(self.deck.draw())
 		self.calc_dsum()
+
+	def game_win(self, blackjacked=False):
+		if self.bet:
+			if blackjacked:
+				Gamer.add_coin(self.player.id, self.bet * 3)
+			else:
+				Gamer.add_coin(self.player.id, self.bet * 2)
+	
+	def game_draw(self):
+		if self.bet:
+			Gamer.add_coin(self.player.id, self.bet)
+			
 
 def fortune(author): # 운세
 	FORTUNES = ['대길', '중길', '소길', '길', '반길', '말길', '말소길', '흉', '소흉', '반흉', '말흉', '대흉']

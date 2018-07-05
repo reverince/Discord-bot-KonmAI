@@ -23,13 +23,14 @@ async def blackjack_dturn(player, channel): # Dealer's turn
 			else:
 				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
 			bj_games[player].cnt_dhit += 1
-			bj_games[player].ddraw()
+			bj_games[player].d_draw()
 			await asyncio.sleep(1.0)
 			if bj_games[player].dsum > 21:
 				await asyncio.sleep(1.0)
 				await bot.send_message(channel, bj_games[player].result())
 				await asyncio.sleep(0.5)
 				await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
+				bj_games[player].game_win()
 				await bot.change_presence(game=discord.Game(name=GAME))
 				del bj_games[player]
 				break
@@ -48,10 +49,15 @@ async def blackjack_dturn(player, channel): # Dealer's turn
 		await asyncio.sleep(1.0)
 		if bj_games[player].psum > bj_games[player].dsum:
 			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_PLAYER))
+			if bj_games[player].psum != 21:
+				bj_games[player].game_win() # 그냥 승리
+			else:
+				bj_games[player].game_win(True) # 블랙잭 승리
 		elif bj_games[player].psum < bj_games[player].dsum:
 			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
 		else:
 			await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
+			bj_games[player].game_draw()
 		await bot.change_presence(game=discord.Game(name=GAME))
 		del bj_games[player]
 
@@ -299,6 +305,7 @@ async def 소전(*args):
 	else:
 		await bot.say('제조시간을 입력해 주세요.')
 
+
 @bot.command(pass_context=True)
 async def 게이머(ctx, *args):
 	"""게이머 데이터 관련 업무"""
@@ -315,9 +322,10 @@ async def 게이머(ctx, *args):
 		result = '어떤 일을 할까요?'
 	
 	await bot.say(author.mention+'님, '+result)
+
 @bot.command(pass_context=True)
 async def 코인(ctx, *args):
-	"""플레이어 코인 데이터 관련 업무"""
+	"""게이머 코인 데이터 관련 업무"""
 	author = ctx.message.author
 
 	if len(args) > 0:
@@ -337,28 +345,45 @@ async def 코인(ctx, *args):
 	
 	await bot.say(author.mention+'님, '+result)
 
+
 @bot.command(pass_context=True)
-async def 블랙잭(ctx):
+async def 블랙잭(ctx, *args):
 	global bj_games
 	player = ctx.message.author
-
+	game_started = True
 	if player not in bj_games.keys():
-		bj_games[player] = Blackjack(player)
-		await bot.change_presence(game=discord.Game(name=player.name+josa(player.name,'과')+' 블랙잭'))
-		await bot.say(bj_games[player])
-		if bj_games[player].psum == 21:
-			await asyncio.sleep(0.5)
-			await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
-			await blackjack_dturn(player, ctx.message.channel)
+		if len(args) > 0 and args[0].isnumeric():
+			bet = int(args[0])
+			gamers = read_json(GAMER_FILE)
+			if player.id in gamers:
+				if Gamer.check_coin(player.id, bet):
+					Gamer.remove_coin(player.id, bet)
+					bj_games[player] = Blackjack(player, bet)
+				else:
+					await bot.say('등록되지 않은 게이머거나 잔액이 부족해요.')
+			else:
+				game_started = False
+				await bot.say('등록되지 않은 게이머예요.')
+		else:
+			bj_games[player] = Blackjack(player)
+		
+		if game_started:
+			await bot.change_presence(game=discord.Game(name=player.name+josa(player.name,'과')+' 블랙잭'))
+			await bot.say(bj_games[player])
+			if bj_games[player].psum == 21:
+				await asyncio.sleep(0.5)
+				await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
+				await blackjack_dturn(player, ctx.message.channel)
 	else:
 		await bot.say('이미 진행 중인 게임이 있어요.')
+
 @bot.command(pass_context=True)
 async def H(ctx):
 	player = ctx.message.author
 	channel = ctx.message.channel
 
 	if player in bj_games.keys():
-		bj_games[player].pdraw()
+		bj_games[player].p_draw()
 		await asyncio.sleep(1.0)
 		await bot.say(bj_games[player])
 		if bj_games[player].psum > 21:
@@ -371,6 +396,7 @@ async def H(ctx):
 			await blackjack_dturn(player, channel)
 	else:
 		await bot.say('진행 중인 게임이 없어요.')
+
 @bot.command(pass_context=True)
 async def S(ctx):
 	player = ctx.message.author
@@ -380,6 +406,7 @@ async def S(ctx):
 		await blackjack_dturn(player, channel)
 	else:
 		await bot.say('진행 중인 게임이 없어요.')
+
 
 @bot.command(pass_context=True)
 async def 주사위(ctx, *args):
@@ -453,11 +480,22 @@ async def 기억(ctx, *args):
 # Commands for DEBUG
 
 @bot.command(pass_context=True)
-async def MYID(ctx):
-	await bot.say(ctx.message.author.id)
+async def ID(ctx, target=None):
+	if target:
+		members = list(bot.get_all_members())
+		member_names = list(map(lambda x: x.name, members))
+		if target in member_names:
+			i = member_names.index(target)
+			await bot.say(members[i].id)
+		else:
+			await bot.say('not found')
+	else:
+		await bot.say(ctx.message.author.id)
 @bot.command()
-async def MEM(*args):
-	await bot.say(', '.join([m.name for m in [s.get_member(args[0]) for s in bot.servers]]))
+async def NAME(*args):
+	result = find_name_by_id(args[0])
+	if result:
+		await bot.say(result)
 @bot.command(pass_context=True)
 async def LOG(ctx):
 	channel = ctx.message.channel
