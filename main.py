@@ -10,64 +10,13 @@ import time
 
 from funcs import *
 
-TOKEN = '' # SECURE!!!
-
-bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
-
-async def blackjack_dturn(player, channel): # Dealer's turn
-	while True:
-		if bj_games[player].dsum < 17: # 딜러 히트
-			await asyncio.sleep(1.0)
-			if bj_games[player].cnt_dhit > 0:
-				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_MORE))
-			else:
-				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
-			bj_games[player].cnt_dhit += 1
-			bj_games[player].d_draw()
-			await asyncio.sleep(1.0)
-			if bj_games[player].dsum > 21:
-				await asyncio.sleep(1.0)
-				await bot.send_message(channel, bj_games[player].result())
-				await asyncio.sleep(0.5)
-				await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
-				bj_games[player].game_win()
-				await bot.change_presence(game=discord.Game(name=GAME))
-				del bj_games[player]
-				break
-			else:
-				await bot.send_message(channel, bj_games[player])
-		else: # 딜러 스탠드
-			await asyncio.sleep(1.0)
-			if bj_games[player].cnt_dhit > 0:
-				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_HIT))
-			else:
-				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_NOHIT))
-			break
-	if player in bj_games.keys():
-		await asyncio.sleep(1.0)
-		await bot.send_message(channel, bj_games[player].result())
-		await asyncio.sleep(1.0)
-		if bj_games[player].psum > bj_games[player].dsum:
-			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_PLAYER))
-			if bj_games[player].psum != 21:
-				bj_games[player].game_win() # 그냥 승리
-			else:
-				bj_games[player].game_win(True) # 블랙잭 승리
-		elif bj_games[player].psum < bj_games[player].dsum:
-			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
-		else:
-			await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
-			bj_games[player].game_draw()
-		await bot.change_presence(game=discord.Game(name=GAME))
-		del bj_games[player]
-
 # Events
 
 @bot.event
 async def on_ready():
 	server_names = [s.name for s in bot.servers]
 	member_names = [m.name for m in set(bot.get_all_members())]
-	#member_names.remove('KonmAI')
+	member_names.remove('KonmAI')
 	print(bot.user.name+' 온라인. ( ID : '+bot.user.id+' )')
 	print('Discord.py 버전 : '+discord.__version__)
 	print('연결된 서버 '+str(len(bot.servers))+'개 : '+', '.join(server_names))
@@ -83,7 +32,7 @@ async def on_message(message):
 	# 초성퀴즈 메시지 처리
 	cho_quiz = ChoQuiz.find(channel)
 	if cho_quiz is not None:
-		if message.content == cho_quiz.answer:
+		if re.sub(' ', '', message.content) == re.sub(' ', '', cho_quiz.answer): # 공백 무시
 			await bot.send_message(channel, '**{}**님의 [**{}**] 정답! :white_check_mark:'.format(message.author.mention, cho_quiz.answer))
 			result = cho_quiz.correct(channel)
 			await bot.send_message(channel, result)
@@ -108,13 +57,13 @@ async def 도움():
 	embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
 	embed.add_field(name='`배그 (WIP)', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
 	embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
+	embed.add_field(name='`주사위', value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
+	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
+	embed.add_field(name='`띠운세', value='[사주닷컴](http://sazoo.com) 띠별 운세를 점쳐볼 수 있어요.\n` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.', inline=True)
+	embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요.', inline=True)
 	embed.add_field(name='`게이머 (WIP)', value='게이머 관련 업무를 수행해요. `등록` / `나`', inline=True)
 	embed.add_field(name='`코인 (WIP)', value='게이머 코인 관련 업무를 수행해요. `초기화` / `이체`', inline=True)
 	embed.add_field(name='`블랙잭', value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요. 코인을 걸 수 있어요.', inline=True)
-	embed.add_field(name='`주사위', value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
-	embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
-	embed.add_field(name='`운세 (WIP)', value='오늘의 운세를 점쳐볼 수 있어요.', inline=True)
-	embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요.', inline=True)
 
 	await bot.say(embed=embed)
 
@@ -131,6 +80,7 @@ async def 더해(ctx, *args):
 	except:
 		pass
 	await bot.say(ctx.message.author.mention+'님, '+result)
+
 @bot.command(pass_context=True)
 async def 빼(ctx, *args):
 	try:
@@ -144,6 +94,7 @@ async def 빼(ctx, *args):
 	except:
 		pass
 	await bot.say(ctx.message.author.mention+'님, '+result)
+
 @bot.command(pass_context=True)
 async def 계산(ctx, *args):
 	try:
@@ -182,6 +133,7 @@ async def 사전(*args):
 		result = '검색 키워드를 입력해 주세요.'
 	
 	await bot.say(result)
+
 @bot.command()
 async def 실검():
 	"""Daum 실시간 검색어 순위"""
@@ -195,6 +147,7 @@ async def 실검():
 		embed.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
 	
 	await bot.say(embed=embed)
+
 @bot.command()
 async def 로또(*args):
 	"""Daum 로또 당첨 번호 검색"""
@@ -217,6 +170,7 @@ async def 로또(*args):
 		await bot.say(embed=embed)
 	else:
 		await bot.say(result)
+
 @bot.command()
 async def 환율(*args):
 	"""Daum 환율 검색"""
@@ -238,8 +192,13 @@ async def 초성(ctx, *args):
 	channel = ctx.message.channel
 	cho_quiz = ChoQuiz.find(channel)
 	
-	if len(args) > 0 and args[0] == '끝':
+	if len(args) == 1 and args[0] == '끝':
 		result = ChoQuiz.end(channel)
+	elif len(args) == 1 and args[0] == '패스':
+		if cho_quiz is not None:
+			result = '정답은 [**'+ cho_quiz.answer + '**]였어요. :hugging:\n' + cho_quiz.correct(channel)
+		else:
+			result = '진행중인 초성퀴즈가 없어요.'
 	elif len(args) > 0 and args[0] == '등록': # 사용자 초성퀴즈 등록
 		result = ChoQuiz.add_custom(ctx.message.author, args[1:])
 	else:
@@ -305,109 +264,6 @@ async def 소전(*args):
 	else:
 		await bot.say('제조시간을 입력해 주세요.')
 
-
-@bot.command(pass_context=True)
-async def 게이머(ctx, *args):
-	"""게이머 데이터 관련 업무"""
-	author = ctx.message.author
-
-	if len(args) > 0:
-		if args[0] == '등록':
-			result = Gamer.init(author.id)
-		elif args[0] == '나':
-			result = Gamer.info(author.id)
-		else:
-			result = '그런 명령어는 없어요.'
-	else:
-		result = '어떤 일을 할까요?'
-	
-	await bot.say(author.mention+'님, '+result)
-
-@bot.command(pass_context=True)
-async def 코인(ctx, *args):
-	"""게이머 코인 데이터 관련 업무"""
-	author = ctx.message.author
-
-	if len(args) > 0:
-		if args[0] == '초기화':
-			result = Gamer.reset_coin(author.id)
-		elif args[0] == '이체':
-			if len(args) == 3:
-				to_id = args[1]
-				amount = int(args[2])
-				result = Gamer.transfer_coin(author.id, to_id, amount)
-			else:
-				result = '` `코인 이체 [상대방] [금액] `처럼 입력해 주세요.'
-		else:
-			result = '그런 명령어는 없어요.'
-	else:
-		result = '어떤 일을 할까요?'
-	
-	await bot.say(author.mention+'님, '+result)
-
-
-@bot.command(pass_context=True)
-async def 블랙잭(ctx, *args):
-	global bj_games
-	player = ctx.message.author
-	game_started = True
-	if player not in bj_games.keys():
-		if len(args) > 0 and args[0].isnumeric():
-			bet = int(args[0])
-			gamers = read_json(GAMER_FILE)
-			if player.id in gamers:
-				if Gamer.check_coin(player.id, bet):
-					Gamer.remove_coin(player.id, bet)
-					bj_games[player] = Blackjack(player, bet)
-				else:
-					await bot.say('등록되지 않은 게이머거나 잔액이 부족해요.')
-			else:
-				game_started = False
-				await bot.say('등록되지 않은 게이머예요.')
-		else:
-			bj_games[player] = Blackjack(player)
-		
-		if game_started:
-			await bot.change_presence(game=discord.Game(name=player.name+josa(player.name,'과')+' 블랙잭'))
-			await bot.say(bj_games[player])
-			if bj_games[player].psum == 21:
-				await asyncio.sleep(0.5)
-				await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
-				await blackjack_dturn(player, ctx.message.channel)
-	else:
-		await bot.say('이미 진행 중인 게임이 있어요.')
-
-@bot.command(pass_context=True)
-async def H(ctx):
-	player = ctx.message.author
-	channel = ctx.message.channel
-
-	if player in bj_games.keys():
-		bj_games[player].p_draw()
-		await asyncio.sleep(1.0)
-		await bot.say(bj_games[player])
-		if bj_games[player].psum > 21:
-			await asyncio.sleep(0.5)
-			await bot.say(random.choice(Blackjack.BUST_MESSAGES_PLAYER))
-			del bj_games[player]
-		elif bj_games[player].psum == 21:
-			await asyncio.sleep(0.5)
-			await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
-			await blackjack_dturn(player, channel)
-	else:
-		await bot.say('진행 중인 게임이 없어요.')
-
-@bot.command(pass_context=True)
-async def S(ctx):
-	player = ctx.message.author
-	channel = ctx.message.channel
-
-	if player in bj_games.keys():
-		await blackjack_dturn(player, channel)
-	else:
-		await bot.say('진행 중인 게임이 없어요.')
-
-
 @bot.command(pass_context=True)
 async def 주사위(ctx, *args):
 	try:
@@ -459,11 +315,17 @@ async def 제비(ctx, *args):
 	await bot.say(result)
 
 @bot.command(pass_context=True)
-async def 운세(ctx):
-	"""하루 한 번 오미쿠지"""
-	
-	author = ctx.message.author
-	result = fortune(author)
+async def 띠운세(ctx, *args):
+	"""띠별 운세 오늘/내일/이번주/이번달/올해"""
+	if len(args)>0:
+		zodiac = args[0]
+		if len(args)>1:
+			period = args[1]
+		else:
+			period = 1 # 오늘
+		result = zodiac_fortune(zodiac, period)
+	else:
+		result = '` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.'
 
 	await bot.say(result)
 
@@ -476,6 +338,118 @@ async def 기억(ctx, *args):
 		await bot.say(result)
 	else: # embed
 		await bot.say(embed=result)
+
+# Commands for GAMER
+
+@bot.command(pass_context=True)
+async def 게이머(ctx, *args):
+	"""게이머 데이터 관련 업무"""
+	author = ctx.message.author
+
+	if len(args) > 0:
+		if args[0] == '등록':
+			result = Gamer.init(author.id)
+		elif args[0] == '나':
+			result = Gamer.info(author.id)
+		else:
+			result = '그런 명령어는 없어요.'
+	else:
+		result = '어떤 일을 할까요?'
+	
+	await bot.say(author.mention+'님, '+result)
+
+@bot.command(pass_context=True)
+async def 코인(ctx, *args):
+	"""게이머 코인 데이터 관련 업무"""
+	author = ctx.message.author
+
+	if len(args) > 0:
+		if args[0] == '초기화':
+			result = Gamer.reset_coin(author.id)
+		elif args[0] == '이체':
+			if len(args) == 3:
+				to_id = args[1]
+				amount = int(args[2])
+				result = Gamer.transfer_coin(author.id, to_id, amount)
+			else:
+				result = '` `코인 이체 [상대방] [금액] `처럼 입력해 주세요.'
+		else:
+			result = '그런 명령어는 없어요.'
+	else:
+		result = '어떤 일을 할까요?'
+	
+	await bot.say(author.mention+'님, '+result)
+
+@bot.command(pass_context=True)
+async def 블랙잭(ctx, *args):
+	global bj_games
+	player = ctx.message.author
+	game_started = True
+	if player not in bj_games.keys():
+		if len(args) > 0 and args[0].isnumeric():
+			bet = int(args[0])
+			if Gamer.find(player.id):
+				if Gamer.check_coin(player.id, bet):
+					Gamer.remove_coin(player.id, bet)
+					bj_games[player] = Blackjack(player, bet)
+				else:
+					await bot.say('등록되지 않은 게이머거나 잔액이 부족해요.')
+			else:
+				game_started = False
+				await bot.say('등록되지 않은 게이머예요.')
+		else:
+			bj_games[player] = Blackjack(player)
+		
+		if game_started:
+			await bot.change_presence(game=discord.Game(name=player.name+josa(player.name,'과')+' 블랙잭'))
+			bj_msgs[player] = await bot.say(bj_games[player])
+			if bj_games[player].psum == 21:
+				await asyncio.sleep(0.5)
+				await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
+				await blackjack_dturn(player, ctx.message.channel)
+	else:
+		await bot.say('이미 진행 중인 게임이 있어요.')
+
+@bot.command(pass_context=True)
+async def H(ctx):
+	player = ctx.message.author
+	channel = ctx.message.channel
+
+	if player in bj_games.keys():
+		try:
+			await bot.delete_message(ctx.message)
+		except:
+			pass
+		
+		bj_games[player].p_draw()
+		await asyncio.sleep(1.0)
+		await bot.edit_message(bj_msgs[player], bj_games[player])
+
+		if bj_games[player].psum > 21:
+			await asyncio.sleep(0.5)
+			await bot.say(random.choice(Blackjack.BUST_MESSAGES_PLAYER))
+			del bj_games[player]
+		elif bj_games[player].psum == 21:
+			await asyncio.sleep(0.5)
+			await bot.say(random.choice(Blackjack.BLACKJACK_MESSAGES))
+			await blackjack_dturn(player, channel)
+	else:
+		await bot.say('진행 중인 게임이 없어요.')
+
+@bot.command(pass_context=True)
+async def S(ctx):
+	player = ctx.message.author
+	channel = ctx.message.channel
+
+	if player in bj_games.keys():
+		try:
+			await bot.delete_message(ctx.message)
+		except:
+			pass
+		
+		await blackjack_dturn(player, channel)
+	else:
+		await bot.say('진행 중인 게임이 없어요.')
 
 # Commands for DEBUG
 
@@ -502,8 +476,8 @@ async def LOG(ctx):
 	result = []
 	async for message in bot.logs_from(channel, limit=10):
 		if message.author == ctx.message.author:
-			result.append(message.content)
-	result = '\n'.join(result[::-1])
+			result.append(re.sub('`', '', message.content))
+	result = '```' + '\n'.join(result[::-1]) + '```'
 	await bot.say(result)
 
 # End of commands

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 from lxml import html
+import asyncio
 import datetime
 import json
 import requests
@@ -9,7 +10,9 @@ import random
 import re
 import time
 
-NAME = 'KonmAI v0.6'
+TOKEN = 'NDQ3NTMxNTQ5MDMwODc1MTQw.DgAIwA.ogOku-IluQx_UC6eX-tAli_8Ebw' # SECURE!!!
+
+NAME = 'KonmAI v0.7'
 PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
@@ -21,10 +24,17 @@ CUSTOM_CHO_QUIZ_FILE = 'custom_cho_quiz.json'
 MEMORY_FILE = 'memory.json'
 GAMER_FILE = 'gamer.json'
 
-cho_quizs = {} # 초성퀴즈 관리
-bj_games = {} # 블랙잭 관리
-lots_games = {} # 제비뽑기 관리
-fortune_users = {} # 운세 관리
+AMEP_PLAYER_FILE = 'AMEP/player.json'
+AMEP_MISSION_FILE = 'AMEP/mission.json'
+
+bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
+
+cho_quizs = {} # 초성퀴즈
+bj_games = {} # 블랙잭
+bj_msgs = {} # 블랙잭 메시지
+lots_games = {} # 제비뽑기
+
+# Commonly used
 
 def read_json(address):
 	try:
@@ -44,8 +54,8 @@ def write_json(address, dic):
 def find_id_by_name(name):
 	members = list(bot.get_all_members())
 	member_names = list(map(lambda x: x.name, members))
-	if target in member_names:
-		i = member_names.index(target)
+	if name in member_names:
+		i = member_names.index(name)
 		return members[i].id
 	else:
 		return None
@@ -57,8 +67,10 @@ def find_name_by_id(id):
 	else:
 		return None
 
+# for Commands
+
 def bignumrize(numstr):
-	"""Discord 이모지로 숫자 강조"""
+	"""Discord 이모지로 숫자 강조. Credit for Discord bot Ayana."""
 	ret = re.sub('0', ':zero:', re.sub('1', ':one:', re.sub('2', ':two:', re.sub('3', ':three:', re.sub('4', ':four:', re.sub('5', ':five:', re.sub('6', ':six:', re.sub('7', ':seven:', re.sub('8', ':eight:', re.sub('9', ':nine:', numstr))))))))))
 
 	return ret
@@ -90,7 +102,7 @@ def daum_search(keyword):
 	return ret
 
 def daum_realtime():
-	""" 1~10위 배열 반환 """
+	"""1~10위 배열 반환"""
 	response = requests.get('https://www.daum.net/')
 	tree = html.fromstring(response.content)
 
@@ -146,7 +158,7 @@ CHO_LITE_LIST = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 
 PARSED_CHO_LIST = ['%A1', '%A2', '%A4', '%A7', '%A8', '%A9', '%B1', '%B2', '%B3', '%B5', '%B6', '%B7', '%B8', '%B9', '%BA', '%BB', '%BC', '%BD', '%BE']
 
 def cho(keyword):
-	""" 단어를 초성으로 """
+	"""단어를 초성으로"""
 	split_keyword_list = list(keyword)
 	result = []
 	for letter in split_keyword_list:
@@ -167,7 +179,7 @@ def cho_gen_lite(length):
 	return result
 
 def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2,3))):
-	""" genre : movie, music, animal, dic, game, people, book """
+	"""genre : movie, music, animal, dic, game, people, book"""
 	query = ''
 	for i in range(0, len(chos)):
 		query += '%A4' + PARSED_CHO_LIST[CHO_LIST.index(chos[i])]
@@ -182,13 +194,13 @@ def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2,3))):
 	return result
 
 def jaum_quiz(genre=None):
-	if genre == "영화": genre = 'movie'
-	elif genre == "음악": genre = 'music'
-	elif genre == "동식물": genre = 'animal'
-	elif genre == "사전": genre = 'dic'
-	elif genre == "게임": genre = 'game'
-	elif genre == "인물": genre = 'people'
-	elif genre == "책": genre = 'book'
+	if genre == '영화': genre = 'movie'
+	elif genre == '음악': genre = 'music'
+	elif genre == '동식물': genre = 'animal'
+	elif genre == '사전': genre = 'dic'
+	elif genre == '게임': genre = 'game'
+	elif genre == '인물': genre = 'people'
+	elif genre == '책': genre = 'book'
 	else:	return None
 
 	answers = []
@@ -226,7 +238,7 @@ class ChoQuiz:
 	def find(channel):
 		global cho_quizs
 
-		return cho_quizs[channel] if channel in cho_quizs.keys() else None
+		return cho_quizs[channel] if channel in cho_quizs else None
 	
 	@staticmethod
 	def start(channel, genre, count, answer):
@@ -242,11 +254,11 @@ class ChoQuiz:
 	@staticmethod
 	def end(channel):
 		global cho_quizs
-		if cho_quizs[channel] is not None:
+		if channel in cho_quizs:
 			del cho_quizs[channel]
 			ret = '초성퀴즈를 종료했어요.'
 		else:
-			ret = '진행 중인 초성퀴즈가 없어요.'
+			ret = '진행중인 초성퀴즈가 없어요.'
 
 		return ret
 	
@@ -345,6 +357,81 @@ def gf_times(pd_time):
 	
 	return '제조시간이 **'+pd_time+'**인 전술인형: '+', '.join(GF_TIMES[pd_time])
 
+FORTUNE_ZODIACS = ['쥐띠', '소띠', '범띠', '토끼띠', '용띠', '뱀띠', '말띠', '양띠', '원숭이띠', '닭띠', '개띠', '돼지띠']
+FORTUNE_PERIODS = ['오늘', '내일', '이번주', '이달', '올해']
+def zodiac_fortune(zodiac, period):
+	if zodiac not in FORTUNE_ZODIACS:
+		return '알맞은 띠를 입력해 주세요.'
+	if period not in FORTUNE_PERIODS:
+		return '기간은 오늘/내일/이번주/이달/올해 중 하나로 입력해 주세요.'
+
+	address = 'https://search.daum.net/search?w=tot&q=' + zodiac +'%20운세'
+	page = requests.get(address)
+	tree = html.fromstring(page.content)
+
+	period = FORTUNE_PERIODS.index(period)
+	ret = tree.xpath('//p[@class="daily_fortune"]//text()')[period]
+
+	return ret
+
+def memory(author, *args): # `기억
+	"""args: ['키워드', '내', '용', ...], memories: {'키워드': ['id', 'name', '내용'] * n}"""
+	MEMORIZE_MESSAGE = ['기억해둘게요.', 'DB에 기록했어요.']
+	NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.', '기억에 없어요.', 'DB에 없는 기억이에요.']
+	
+	memories = read_json(MEMORY_FILE)
+	
+	if len(args) > 1:
+		if args[0] == '삭제':
+			if args[1] in memories:
+				mem = memories[args[1]]
+				if author.id in mem[::3]:
+					i = mem.index(author.id)
+					for _ in range(3):
+						del memories[args[1]][i]
+				else:
+					return '그 키워드에 대한 '+author.name+'님의 기억은 없어요.'
+			else:
+				return random.choice(NOT_IN_MEMORY_MESSAGE)
+		elif args[0] in memories: # 키워드에 대한 기억 존재
+			mem = memories[args[0]]
+			if author.id in mem[::3]: # 같은 유저의 기억 덮어쓰기
+				i = mem.index(author.id)
+				memories[args[0]][i] = author.id
+				memories[args[0]][i+1] = author.name
+				memories[args[0]][i+2] = ' '.join(args[1:])
+			else: # 새로운 유저의 기억
+				memories[args[0]] += [author.id, author.name, ' '.join(args[1:])]
+		else: # 새로운 키워드
+			memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
+		
+		write_json(MEMORY_FILE, memories)
+		return random.choice(MEMORIZE_MESSAGE) if args[0] != '삭제' else '기억에서 지웠어요.'
+	elif len(args) == 1:
+		if args[0] == '삭제':
+			return '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
+		elif args[0] in memories or args[0] == '랜덤':
+			if args[0] == '랜덤' and len(memories) > 0:
+				key = random.choice(list(memories.keys()))
+			elif args[0] in memories:
+				key = args[0]
+			else:
+				return '기억이 하나도 없어요.'
+			
+			mem = memories[key]
+			contents = []
+			for i in range(0, len(mem)//3):
+				contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
+			embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
+			embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
+			return embed
+		else:
+			return random.choice(NOT_IN_MEMORY_MESSAGE)
+	else:
+		return '기억해둘 내용이나 기억해낼 내용을 입력해 주세요.'
+
+# for GAMER
+
 class Gamer:
 
 	@staticmethod
@@ -361,6 +448,12 @@ class Gamer:
 		
 		return ret
 	
+	@staticmethod
+	def find(id):
+		gamers = read_json(GAMER_FILE)
+
+		return True if id in gamers else False
+
 	@staticmethod
 	def info(id):
 		gamers = read_json(GAMER_FILE)
@@ -494,6 +587,7 @@ class Deck:
 	def top(self):
 		return self.cards[-1]  #if len(self.cards) > 0 else None
 
+BLACKJACKED, WIN, DRAW, LOSE = 1, 2, 4, 8
 class Blackjack:
 	BLACKJACK_MESSAGES = ['블랙잭!!']
 	HIT_MESSAGES = ['히트.', '히트!', '히트다 히트!', '한 장 더 뽑을게요.']
@@ -541,6 +635,24 @@ class Blackjack:
 
 		return ret
 	
+	@staticmethod
+	def end(player, result):
+		global bj_games
+		global bj_msgs
+		
+		if player in bj_games:
+			bet = bj_games[player].bet
+			if bet is not None:
+				if result == BLACKJACKED:
+					Gamer.add_coin(player.id, bet * 3)
+				elif result == WIN:
+					Gamer.add_coin(player.id, bet * 2)
+				elif result == DRAW:
+					Gamer.add_coin(player.id, bet)
+			del bj_games[player]
+		if player in bj_msgs:
+			del bj_msgs[player]
+	
 	def calc_psum(self):
 		self.psum = Blackjack.sum(self.pcards)
 
@@ -555,83 +667,49 @@ class Blackjack:
 		self.dcards.append(self.deck.draw())
 		self.calc_dsum()
 
-	def game_win(self, blackjacked=False):
-		if self.bet:
-			if blackjacked:
-				Gamer.add_coin(self.player.id, self.bet * 3)
+async def blackjack_dturn(player, channel): # Dealer's turn
+	while True:
+		if bj_games[player].dsum < 17: # 딜러 히트
+			await asyncio.sleep(1.0)
+			if bj_games[player].cnt_dhit > 0:
+				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_MORE))
 			else:
-				Gamer.add_coin(self.player.id, self.bet * 2)
-	
-	def game_draw(self):
-		if self.bet:
-			Gamer.add_coin(self.player.id, self.bet)
-			
-
-def fortune(author): # 운세
-	FORTUNES = ['대길', '중길', '소길', '길', '반길', '말길', '말소길', '흉', '소흉', '반흉', '말흉', '대흉']
-	
-	today = datetime.date.today()
-
-	if author not in fortune_users.keys() or (today - fortune_users[author]).days > 0:
-		fortune_users[author] = today
-		ret = random.choice(FORTUNES)
-	else:
-		ret = '오늘은 이미 오미쿠지를 뽑았어요.'
-	
-	return ret
-
-def memory(author, *args): # `기억
-	"""args: ['키워드', '내', '용', ...], memories: {'키워드': ['id', 'name', '내용'] * n}"""
-	MEMORIZE_MESSAGE = ['기억해둘게요.', 'DB에 기록했어요.']
-	NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.', '기억에 없어요.', 'DB에 없는 기억이에요.']
-	
-	memories = read_json(MEMORY_FILE)
-	
-	if len(args) > 1:
-		if args[0] == '삭제':
-			if args[1] in memories:
-				mem = memories[args[1]]
-				if author.id in mem[::3]:
-					i = mem.index(author.id)
-					for _ in range(3):
-						del memories[args[1]][i]
-				else:
-					return '그 키워드에 대한 '+author.name+'님의 기억은 없어요.'
+				await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
+			bj_games[player].cnt_dhit += 1
+			bj_games[player].d_draw()
+			await asyncio.sleep(1.0)
+			if bj_games[player].dsum > 21:
+				await asyncio.sleep(1.0)
+				await bot.edit_message(bj_msgs[player], bj_games[player].result())
+				await asyncio.sleep(0.5)
+				await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
+				Blackjack.end(player, WIN)
+				break
 			else:
-				return random.choice(NOT_IN_MEMORY_MESSAGE)
-		elif args[0] in memories: # 키워드에 대한 기억 존재
-			mem = memories[args[0]]
-			if author.id in mem[::3]: # 같은 유저의 기억 덮어쓰기
-				i = mem.index(author.id)
-				memories[args[0]][i] = author.id
-				memories[args[0]][i+1] = author.name
-				memories[args[0]][i+2] = ' '.join(args[1:])
-			else: # 새로운 유저의 기억
-				memories[args[0]] += [author.id, author.name, ' '.join(args[1:])]
-		else: # 새로운 키워드
-			memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
-		
-		write_json(MEMORY_FILE, memories)
-		return random.choice(MEMORIZE_MESSAGE) if args[0] != '삭제' else '기억에서 지웠어요.'
-	elif len(args) == 1:
-		if args[0] == '삭제':
-			return '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
-		elif args[0] in memories or args[0] == '랜덤':
-			if args[0] == '랜덤' and len(memories) > 0:
-				key = random.choice(list(memories.keys()))
-			elif args[0] in memories:
-				key = args[0]
+				await bot.edit_message(bj_msgs[player], bj_games[player])
+		else: # 딜러 스탠드
+			await asyncio.sleep(1.0)
+			if bj_games[player].cnt_dhit > 0:
+				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_HIT))
 			else:
-				return '기억이 하나도 없어요.'
-			
-			mem = memories[key]
-			contents = []
-			for i in range(0, len(mem)//3):
-				contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
-			embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
-			embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
-			return embed
+				await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_NOHIT))
+			break
+	
+	if player in bj_games:
+		await asyncio.sleep(1.0)
+		await bot.edit_message(bj_msgs[player], bj_games[player].result())
+		await asyncio.sleep(1.0)
+		if bj_games[player].psum > bj_games[player].dsum:
+			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_PLAYER))
+			if bj_games[player].psum != 21:
+				Blackjack.end(player, WIN)
+			else:
+				Blackjack.end(player, BLACKJACKED)
+		elif bj_games[player].psum < bj_games[player].dsum:
+			await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
+			Blackjack.end(player, LOSE)
 		else:
-			return random.choice(NOT_IN_MEMORY_MESSAGE)
-	else:
-		return '기억해둘 내용이나 기억해낼 내용을 입력해 주세요.'
+			await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
+			Blackjack.end(player, DRAW)
+	
+	await bot.change_presence(game=discord.Game(name=GAME))
