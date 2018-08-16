@@ -5,12 +5,13 @@ from lxml import html
 import asyncio
 import datetime
 import json
+import os
 import requests
 import random
 import re
 import time
 
-TOKEN = process.env.TOKEN
+TOKEN = os.environ.get('TOKEN')
 
 NAME = 'KonmAI v0.7'
 PREFIX = '`'
