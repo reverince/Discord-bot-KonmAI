@@ -10,7 +10,7 @@ import random
 import re
 import time
 
-TOKEN = os.environ.get('token')
+TOKEN = process.env.TOKEN
 
 NAME = 'KonmAI v0.7'
 PREFIX = '`'
