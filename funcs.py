@@ -10,7 +10,7 @@ import random
 import re
 import time
 
-TOKEN = 'NDQ3NTMxNTQ5MDMwODc1MTQw.DgAIwA.ogOku-IluQx_UC6eX-tAli_8Ebw' # SECURE!!!
+TOKEN = '' # SECURE!!!
 
 NAME = 'KonmAI v0.7'
 PREFIX = '`'
