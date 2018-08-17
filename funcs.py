@@ -11,9 +11,9 @@ import random
 import re
 import time
 
-TOKEN = os.environ.get('TOKEN')
+TOKEN = os.environ['TOKEN']
 
-NAME = 'KonmAI v0.7'
+NAME = 'KonmAI v0.8'
 PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
