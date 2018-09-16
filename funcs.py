@@ -83,7 +83,7 @@ def bignumrize(numstr):
 
     return ret
 
-
+'''
 def daum_search(keyword):
     page = requests.get('http://dic.daum.net/search.do?q='+keyword)
     tree = html.fromstring(page.content)
@@ -165,7 +165,7 @@ def daum_exchange(keyword):
         rate /= 100
 
     return round(amount * rate, 2)
-
+'''
 
 BASE, CHO, JUNG = 44032, 588, 28
 CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']

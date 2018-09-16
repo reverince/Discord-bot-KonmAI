@@ -55,10 +55,12 @@ async def 도움():
     embed.add_field(name='`빼', value='처음 수에서 나머지 수를 뺄셈해요.', inline=True)
     embed.add_field(name='`계산', value='(이 정도 쯤이야.)', inline=True)
     embed.add_field(name='`골라', value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
+    '''
     embed.add_field(name='`사전', value='[Daum](https://daum.net) 사전에서 검색해요.', inline=True)
     embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
     embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
     embed.add_field(name='`환율', value='Daum에서 환율을 검색해요.', inline=True)
+    '''
     embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
     embed.add_field(name='`배그 (WIP)', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
     embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
@@ -484,7 +486,7 @@ async def S(ctx):
 
 
 @bot.command(pass_context=True)
-async def ID(ctx, target=None):
+async def findID(ctx, target=None):
     if target:
         members = list(bot.get_all_members())
         member_names = list(map(lambda x: x.name, members))
@@ -498,14 +500,14 @@ async def ID(ctx, target=None):
 
 
 @bot.command()
-async def NAME(*args):
+async def findNAME(*args):
     result = find_name_by_id(args[0])
     if result:
         await bot.say(result)
 
 
 @bot.command(pass_context=True)
-async def LOG(ctx):
+async def printLog(ctx):
     channel = ctx.message.channel
     result = []
     async for message in bot.logs_from(channel, limit=10):
