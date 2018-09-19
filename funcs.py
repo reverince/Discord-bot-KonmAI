@@ -83,6 +83,7 @@ def bignumrize(numstr):
 
     return ret
 
+
 '''
 def daum_search(keyword):
     page = requests.get('http://dic.daum.net/search.do?q='+keyword)
@@ -165,7 +166,27 @@ def daum_exchange(keyword):
         rate /= 100
 
     return round(amount * rate, 2)
+
+
+def zodiac_fortune(zodiac, period):
+    FORTUNE_ZODIACS = ['쥐띠', '소띠', '범띠', '토끼띠', '용띠', '뱀띠', '말띠', '양띠', '원숭이띠', '닭띠', '개띠', '돼지띠']
+    FORTUNE_PERIODS = ['오늘', '내일', '이번주', '이달', '올해']
+
+    if zodiac not in FORTUNE_ZODIACS:
+        return '알맞은 띠를 입력해 주세요.'
+    if period not in FORTUNE_PERIODS:
+        return '기간은 오늘/내일/이번주/이달/올해 중 하나로 입력해 주세요.'
+
+    address = 'https://search.daum.net/search?w=tot&q=' + zodiac + '%20운세'
+    page = requests.get(address)
+    tree = html.fromstring(page.content)
+
+    period = FORTUNE_PERIODS.index(period)
+    ret = tree.xpath('//p[@class="daily_fortune"]//text()')[period]
+
+    return ret
 '''
+
 
 BASE, CHO, JUNG = 44032, 588, 28
 CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
@@ -388,25 +409,6 @@ def gf_times(pd_time):
         pd_time = pd_time[0:2] + ':' + pd_time[2:4]
 
     return '제조시간이 **'+pd_time+'**인 전술인형: '+', '.join(GF_TIMES[pd_time])
-
-
-def zodiac_fortune(zodiac, period):
-    FORTUNE_ZODIACS = ['쥐띠', '소띠', '범띠', '토끼띠', '용띠', '뱀띠', '말띠', '양띠', '원숭이띠', '닭띠', '개띠', '돼지띠']
-    FORTUNE_PERIODS = ['오늘', '내일', '이번주', '이달', '올해']
-
-    if zodiac not in FORTUNE_ZODIACS:
-        return '알맞은 띠를 입력해 주세요.'
-    if period not in FORTUNE_PERIODS:
-        return '기간은 오늘/내일/이번주/이달/올해 중 하나로 입력해 주세요.'
-
-    address = 'https://search.daum.net/search?w=tot&q=' + zodiac + '%20운세'
-    page = requests.get(address)
-    tree = html.fromstring(page.content)
-
-    period = FORTUNE_PERIODS.index(period)
-    ret = tree.xpath('//p[@class="daily_fortune"]//text()')[period]
-
-    return ret
 
 
 def memory(author, *args):  # `기억

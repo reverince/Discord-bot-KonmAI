@@ -60,13 +60,14 @@ async def 도움():
     embed.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
     embed.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
     embed.add_field(name='`환율', value='Daum에서 환율을 검색해요.', inline=True)
+    embed.add_field(name='`띠운세', value='[사주닷컴](http://sazoo.com) 띠별 운세를 점쳐볼 수 있어요.\n` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.', inline=True)
     '''
     embed.add_field(name='`초성', value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
     embed.add_field(name='`배그 (WIP)', value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
     embed.add_field(name='`소전', value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` `소전 03:40 `처럼 사용하세요.', inline=True)
     embed.add_field(name='`주사위', value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
     embed.add_field(name='`제비', value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
-    embed.add_field(name='`띠운세', value='[사주닷컴](http://sazoo.com) 띠별 운세를 점쳐볼 수 있어요.\n` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.', inline=True)
+    
     embed.add_field(name='`기억', value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요.', inline=True)
     embed.add_field(name='`게이머 (WIP)', value='게이머 관련 업무를 수행해요. `등록` / `나`', inline=True)
     embed.add_field(name='`코인 (WIP)', value='게이머 코인 관련 업무를 수행해요. `초기화` / `이체`', inline=True)
