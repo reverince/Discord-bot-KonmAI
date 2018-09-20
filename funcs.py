@@ -13,7 +13,7 @@ import time
 
 TOKEN = os.environ['TOKEN']
 
-NAME = 'KonmAI v0.8'
+BOTNAME = 'KonmAI v0.8'
 PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
@@ -460,7 +460,7 @@ def memory(author, *args):  # `기억
             for i in range(0, len(mem)//3):
                 contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
             embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
-            embed.set_author(name='KonmAI DB', url=URL, icon_url=ICON_URL)
+            embed.set_author(name=BOTNAME + ' DB', url=URL, icon_url=ICON_URL)
             return embed
         else:
             return random.choice(NOT_IN_MEMORY_MESSAGE)
