@@ -1,3 +1,7 @@
+goorm.manifest
+
 __pycache__
 .env
-goorm.manifest
+
+gamer.json
+memory.json
