@@ -58,14 +58,13 @@ def hunting(keyword):
 
 def recipe(keyword):
 
-    keyword = re.sub(' ', '%20', keyword)
-    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + keyword + '&search=recipe'
+    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + re.sub(' ', '%20', keyword) + '&search=recipe'
     page = requests.get(address)
     tree = html.fromstring(page.content.decode('utf-8'))
-    results = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
+    results = tree.xpath('//div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
     if keyword in results:
-        idx = names.index(keyword)
-        href = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[idx]
+        idx = results.index(keyword)
+        href = tree.xpath('//div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[idx]
         address = 'http://guide.ff14.co.kr' + href
         page = requests.get(address)
         tree = html.fromstring(page.content.decode('utf-8'))
@@ -74,10 +73,11 @@ def recipe(keyword):
         # cnts = ['3 ', '1 ']
         cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p/text()')
 
+        title = '**' + keyword + '**의 제작 레시피'
         desc = ''
         for i in range(0, len(names)):
             desc += cnts[i] + names[i] + '\n'
-        ret = discord.Embed(title=keyword, description=desc, color=funcs.THEME_COLOR)
+        ret = discord.Embed(title=title, description=desc, color=funcs.THEME_COLOR)
         ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
         ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
     else:
@@ -87,26 +87,38 @@ def recipe(keyword):
 
 def gathering(keyword):
 
-    keyword = re.sub(' ', '%20', keyword)
-    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + keyword + '&search=recipe'
+    for substr in ['샤드', '크리스탈', '클러스터']:
+        if substr in keyword:
+            return '샤드, 크리스탈, 클러스터는 검색할 수 없어요. :disappointed_relieved:'
+    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + re.sub(' ', '%20', keyword) + '&search=gathering'
     page = requests.get(address)
     tree = html.fromstring(page.content.decode('utf-8'))
-    results = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
-    if keyword in results:
-        idx = names.index(keyword)
-        href = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[idx]
+    names = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
+    if keyword in names:
+        i = names.index(keyword)
+        href = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[i]
         address = 'http://guide.ff14.co.kr' + href
         page = requests.get(address)
         tree = html.fromstring(page.content.decode('utf-8'))
 
-        names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p//b//text()')
-        # cnts = ['3 ', '1 ']
-        cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p/text()')
+        regions = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[2]/div[1]/div[2]//p//span//text()')
+        areas = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[2]/div[1]/div[2]//p//b//text()')
+        locations = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[2]/div[1]/div[2]//text()')
+        locations = [x.strip() for x in locations]
+        locations = list(filter(lambda x: len(x) > 0, locations))
 
+        title = '**' + keyword + '**의 채집 위치'
         desc = ''
-        for i in range(0, len(names)):
-            desc += cnts[i] + names[i] + '\n'
-        ret = discord.Embed(title=keyword, description=desc, color=funcs.THEME_COLOR)
+        for location in locations[1:]:
+            if location in regions:
+                location = '**' + location + '**'
+            elif location in areas:
+                location = '　' + location
+            else:
+                location = '　　`' + location + '`'
+            desc += location + '\n'
+
+        ret = discord.Embed(title=title, description=desc, color=funcs.THEME_COLOR)
         ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
         ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
     else:

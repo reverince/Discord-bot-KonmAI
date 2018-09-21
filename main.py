@@ -55,9 +55,11 @@ async def 도움(*args):
         if args[0] == '파판':
             result = discord.Embed(description='FFXIV 관련 명령어를 모아 놓았어요.', color=THEME_COLOR)
             result.set_author(name=BOTNAME, url=URL, icon_url=ICON_URL)
-            result.add_field(name='`공식', value='공식 가이드에서 입력하신 키워드를 검색해요. ` `공식 제멜 토마토 `')
+            result.add_field(name='`공식',
+                             value='[공식 가이드](http://guide.ff14.co.kr/lodestone) 검색 링크를 만들어요. ` `공식 제멜 토마토 `')
             result.add_field(name='`토벌 (WIP)', value='토벌수첩 몬스터가 어디 있는지 알려 드려요. ` `토벌 무당벌레 `')
-            #result.add_field(name='`레시피', value='[타르토맛 타르트](https://ff14.tar.to)에서 아이템 레시피를 검색해요. ` `레시피 의료 도구 `')
+            result.add_field(name='`레시피', value='공식 가이드에서 아이템 제작 레시피를 검색해요. ` `레시피 고리갑옷 `')
+            result.add_field(name='`채집', value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
         else:
             result = '그런 도움말은 없어요.'
 
@@ -549,6 +551,20 @@ async def 레시피(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
         result = ffxiv.recipe(keyword)
+    else:
+        result = '검색할 키워드를 입력해 주세요.'
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
+async def 채집(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.gathering(keyword)
     else:
         result = '검색할 키워드를 입력해 주세요.'
 
