@@ -7,31 +7,53 @@ import requests
 
 import funcs
 
+JOB_NPC_FILE = 'FFXIV/job_npc.json'
 HUNTING_FILE = 'FFXIV/hunting.json'
 
 
-def search_guide(keyword):
+def guide(keyword):
     keyword = re.sub(' ', '%20', keyword)
     address = 'https://guide.ff14.co.kr/lodestone/search?keyword=' + keyword
     markdown = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
-    embed = discord.Embed(description=markdown, color=funcs.THEME_COLOR)
-    embed.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
+    ret = discord.Embed(description=markdown, color=funcs.THEME_COLOR)
+    ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
 
-    return embed
+    return ret
 
 
-def search_hunting(keyword):
+def job_quest(keyword):
+    job_npcs = funcs.read_json(JOB_NPC_FILE)
+    print(keyword)
+
+    if keyword in job_npcs:
+        name = job_npcs[keyword]['name']
+        pos = job_npcs[keyword]['pos']
+        ret = '**' + keyword + '**의 잡 퀘스트 NPC: ' + name + ' (' + pos + ')'
+    else:
+        ret = '그런 잡을 찾지 못했어요. :sweat_smile:'
+
+    return ret
+
+
+def hunting(keyword):
     huntings = funcs.read_json(HUNTING_FILE)
 
     if keyword in huntings:
-        ret = '**' + keyword + '**: ' + huntings[keyword]
+        pos = huntings[keyword]['pos']
+        href = huntings[keyword]['href']
+        img = huntings[keyword]['img']
+        markdown = '[' + pos + '](' + href + ')'
+        ret = discord.Embed(title=keyword,
+                            description=markdown, color=funcs.THEME_COLOR)
+        ret.set_footer(text='자료: 파이널판타지 14 인벤')
+        ret.set_image(url=img)
     else:
         ret = '토벌수첩에서 ' + keyword + funcs.josa(keyword, '를') + ' 찾지 못했어요.'
 
     return ret
 
 
-def search_recipe(keyword):
+def recipe(keyword):
     addr_base = 'https://ff14.tar.to'
     address = addr_base + '/item/list/?keyword=' + keyword
     page = requests.get(address)

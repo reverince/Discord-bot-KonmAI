@@ -57,7 +57,7 @@ async def 도움(*args):
             result.set_author(name=BOTNAME, url=URL, icon_url=ICON_URL)
             result.add_field(name='`공식', value='공식 가이드에서 입력하신 키워드를 검색해요. ` `공식 제멜 토마토 `')
             result.add_field(name='`토벌 (WIP)', value='토벌수첩 몬스터가 어디 있는지 알려 드려요. ` `토벌 무당벌레 `')
-            result.add_field(name='`레시피', value='[타르토맛 타르트](https://ff14.tar.to)에서 아이템 레시피를 검색해요. ` `레시피 의료 도구 `')
+            #result.add_field(name='`레시피', value='[타르토맛 타르트](https://ff14.tar.to)에서 아이템 레시피를 검색해요. ` `레시피 의료 도구 `')
         else:
             result = '그런 도움말은 없어요.'
 
@@ -509,7 +509,7 @@ async def S(ctx):
 async def 공식(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
-        result = ffxiv.search_guide(keyword)
+        result = ffxiv.guide(keyword)
     else:
         result = '검색할 키워드를 입력해 주세요.'
 
@@ -520,21 +520,35 @@ async def 공식(*args):
 
 
 @bot.command()
+async def 잡퀘(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.job_quest(keyword)
+    else:
+        result = '검색할 잡 이름을 입력해 주세요.'
+
+    await bot.say(result)
+
+
+@bot.command()
 async def 토벌(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
-        result = ffxiv.search_hunting(keyword)
+        result = ffxiv.hunting(keyword)
     else:
         result = '검색할 몬스터 이름을 입력해 주세요.'
 
-    await bot.say(result)
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
 
 '''
 @bot.command()
 async def 레시피(*args):
     if len(args) > 0:
         keyword = args[0]
-        result = ffxiv.search_recipe(keyword)
+        result = ffxiv.recipe(keyword)
     else:
         result = '검색할 키워드를 입력해 주세요.'
 

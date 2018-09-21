@@ -13,7 +13,7 @@ import time
 
 TOKEN = os.environ['TOKEN']
 
-BOTNAME = 'KonmAI v0.8'
+BOTNAME = 'KonmAI v0.9'
 PREFIX = '`'
 DESCRIPTION = ''
 GAME = '도움말은 `도움'
