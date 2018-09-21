@@ -543,23 +543,26 @@ async def 토벌(*args):
     else:  # embed
         await bot.say(embed=result)
 
-'''
+
 @bot.command()
 async def 레시피(*args):
     if len(args) > 0:
-        keyword = args[0]
+        keyword = ' '.join(args)
         result = ffxiv.recipe(keyword)
     else:
         result = '검색할 키워드를 입력해 주세요.'
 
-    await bot.say(result)
-'''
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
 
 # Commands for DEBUG
 
 
 @bot.command(pass_context=True)
-async def findID(ctx, target=None):
+async def find_id(ctx, target=None):
     if target:
         members = list(bot.get_all_members())
         member_names = list(map(lambda x: x.name, members))
@@ -573,14 +576,14 @@ async def findID(ctx, target=None):
 
 
 @bot.command()
-async def findNAME(*args):
+async def find_name(*args):
     result = find_name_by_id(args[0])
     if result:
         await bot.say(result)
 
 
 @bot.command(pass_context=True)
-async def printLog(ctx):
+async def print_log(ctx):
     channel = ctx.message.channel
     result = []
     async for message in bot.logs_from(channel, limit=10):

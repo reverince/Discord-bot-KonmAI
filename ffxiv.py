@@ -12,6 +12,7 @@ HUNTING_FILE = 'FFXIV/hunting.json'
 
 
 def guide(keyword):
+
     keyword = re.sub(' ', '%20', keyword)
     address = 'https://guide.ff14.co.kr/lodestone/search?keyword=' + keyword
     markdown = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
@@ -22,6 +23,7 @@ def guide(keyword):
 
 
 def job_quest(keyword):
+
     job_npcs = funcs.read_json(JOB_NPC_FILE)
     print(keyword)
 
@@ -36,6 +38,7 @@ def job_quest(keyword):
 
 
 def hunting(keyword):
+
     huntings = funcs.read_json(HUNTING_FILE)
 
     if keyword in huntings:
@@ -54,22 +57,58 @@ def hunting(keyword):
 
 
 def recipe(keyword):
-    addr_base = 'https://ff14.tar.to'
-    address = addr_base + '/item/list/?keyword=' + keyword
-    page = requests.get(address)
-    tree = html.fromstring(page.content)
-    print('searchRecipe: ' + tree.xpath('//a/@href')[14])
-    item = re.sub('\n', '', ' '.join(tree.xpath('//a//text()')[15].split()))
-    address = addr_base + tree.xpath('//a/@href')[14]
-    page = requests.get(address)
-    tree = html.fromstring(page.content)
 
-    data = tree.xpath('/html/body/div[3]/div[1]/ul/li//text()')
-    data = list(map(lambda x: re.sub('\n', '', ' '.join(x.split())), data))
-    data = list(filter(lambda x: x != '', data))
+    keyword = re.sub(' ', '%20', keyword)
+    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + keyword + '&search=recipe'
+    page = requests.get(address)
+    tree = html.fromstring(page.content.decode('utf-8'))
+    results = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
+    if keyword in results:
+        idx = names.index(keyword)
+        href = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[idx]
+        address = 'http://guide.ff14.co.kr' + href
+        page = requests.get(address)
+        tree = html.fromstring(page.content.decode('utf-8'))
 
-    if len(data) > 0:
-        ret = '**' + item + '**의 레시피: ' + ', '.join(data)
+        names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p//b//text()')
+        # cnts = ['3 ', '1 ']
+        cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p/text()')
+
+        desc = ''
+        for i in range(0, len(names)):
+            desc += cnts[i] + names[i] + '\n'
+        ret = discord.Embed(title=keyword, description=desc, color=funcs.THEME_COLOR)
+        ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
+        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
+    else:
+        ret = '결과를 찾지 못했어요.'
+
+    return ret
+
+def gathering(keyword):
+
+    keyword = re.sub(' ', '%20', keyword)
+    address = 'http://guide.ff14.co.kr/lodestone/search?keyword=' + keyword + '&search=recipe'
+    page = requests.get(address)
+    tree = html.fromstring(page.content.decode('utf-8'))
+    results = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//text()')
+    if keyword in results:
+        idx = names.index(keyword)
+        href = tree.xpath('/html/body/div[2]/div[2]/div[2]/div[4]/table/tbody//tr/td[1]/a//@href')[idx]
+        address = 'http://guide.ff14.co.kr' + href
+        page = requests.get(address)
+        tree = html.fromstring(page.content.decode('utf-8'))
+
+        names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p//b//text()')
+        # cnts = ['3 ', '1 ']
+        cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p/text()')
+
+        desc = ''
+        for i in range(0, len(names)):
+            desc += cnts[i] + names[i] + '\n'
+        ret = discord.Embed(title=keyword, description=desc, color=funcs.THEME_COLOR)
+        ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
+        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
     else:
         ret = '결과를 찾지 못했어요.'
 
