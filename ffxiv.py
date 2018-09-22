@@ -69,14 +69,19 @@ def recipe(keyword):
         page = requests.get(address)
         tree = html.fromstring(page.content.decode('utf-8'))
 
-        names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p//b//text()')
         # cnts = ['3 ', '1 ']
         cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p/text()')
+        names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[1]//li//p//b//text()')
+        # 재료 크리스탈
+        c_cnts = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[2]//li//p/text()')
+        c_names = tree.xpath('//div[2]/div[2]/div[2]/div[2]/div[1]/div[2]/ul[2]//li//p//b//text()')
 
         title = '**' + keyword + '**의 제작 레시피'
         desc = ''
-        for i in range(0, len(names)):
-            desc += cnts[i] + names[i] + '\n'
+        for i in range(len(names)):
+            desc += ':small_orange_diamond: `' + cnts[i] + '` ' + names[i] + '\n'
+        for i in range(len(c_names)):
+            desc += ':small_blue_diamond: `' + c_cnts[i] + '` ' + c_names[i] + '\n'
         ret = discord.Embed(title=title, description=desc, color=funcs.THEME_COLOR)
         ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
         ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
