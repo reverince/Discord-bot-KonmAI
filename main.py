@@ -50,16 +50,19 @@ async def on_message(message):
 @bot.command()
 async def 도움(*args):
     """ㄴㄱ ㄴㄱㄴㄱ?"""
-    
+
     if len(args) > 0:
         if args[0] == '파판':
-            result = discord.Embed(description='FFXIV 관련 명령어를 모아 놓았어요.', color=THEME_COLOR)
+            result = discord.Embed(description='FFXIV 관련 명령어를 모아 놓았어요쿠뽀.', color=THEME_COLOR)
             result.set_author(name=BOTNAME, url=URL, icon_url=ICON_URL)
             result.add_field(name='`공식',
                              value='[공식 가이드](http://guide.ff14.co.kr/lodestone) 검색 링크를 만들어요. ` `공식 제멜 토마토 `')
-            result.add_field(name='`토벌 (WIP)', value='토벌수첩 몬스터가 어디 있는지 알려 드려요. ` `토벌 무당벌레 `')
             result.add_field(name='`레시피', value='공식 가이드에서 아이템 제작 레시피를 검색해요. ` `레시피 고리갑옷 `')
+            result.add_field(name='`상점', value='공식 가이드에서 아이템 판매 NPC를 검색해요. ` `상점 질긴 가죽 `')
+            result.add_field(name='`잡퀘', value='잡 퀘스트 NPC 위치를 알려 드려요. ` `잡퀘 전사`\n창천, 홍련 추가 직업은 아직 지원되지 않아요.')
             result.add_field(name='`채집', value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
+            result.add_field(name='`토벌 (WIP)', value='토벌수첩 몬스터가 어디 있는지 알려 드려요. ` `토벌 무당벌레 `')
+
         else:
             result = '그런 도움말은 없어요.'
 
@@ -130,7 +133,7 @@ async def 빼(ctx, *args):
 @bot.command(pass_context=True)
 async def 계산(ctx, *args):
     try:
-        result = ' '.join(args) + ' = ' + str(eval(''.join(args)))
+        result = ' '.join(args) + ' = **' + str(eval(''.join(args))) + '**'
     except ZeroDivisionError:
         result = '아무래도 0으로 나눌 수는 없어요. :thinking:'
     except SyntaxError:
@@ -178,7 +181,7 @@ async def 실검():
     tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
 
     result = discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=tm_str+' 기준', color=THEME_COLOR)
-    for i in range(0, 10):
+    for i in range(10):
         result.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
 
     await bot.say(embed=result)
@@ -513,7 +516,35 @@ async def 공식(*args):
         keyword = ' '.join(args)
         result = ffxiv.guide(keyword)
     else:
-        result = '검색할 키워드를 입력해 주세요.'
+        result = ENTER_KEYWORD_MESSAGE
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
+async def 레시피(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.recipe(keyword)
+    else:
+        result = ENTER_KEYWORD_MESSAGE
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
+async def 상점(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.seller(keyword)
+    else:
+        result = ENTER_KEYWORD_MESSAGE
 
     if type(result) is str:
         await bot.say(result)
@@ -533,40 +564,26 @@ async def 잡퀘(*args):
 
 
 @bot.command()
+async def 채집(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.gathering(keyword)
+    else:
+        result = ENTER_KEYWORD_MESSAGE
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
 async def 토벌(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
         result = ffxiv.hunting(keyword)
     else:
         result = '검색할 몬스터 이름을 입력해 주세요.'
-
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
-
-
-@bot.command()
-async def 레시피(*args):
-    if len(args) > 0:
-        keyword = ' '.join(args)
-        result = ffxiv.recipe(keyword)
-    else:
-        result = '검색할 키워드를 입력해 주세요.'
-
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
-
-
-@bot.command()
-async def 채집(*args):
-    if len(args) > 0:
-        keyword = ' '.join(args)
-        result = ffxiv.gathering(keyword)
-    else:
-        result = '검색할 키워드를 입력해 주세요.'
 
     if type(result) is str:
         await bot.say(result)

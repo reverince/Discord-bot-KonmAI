@@ -24,9 +24,10 @@ ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab
 CUSTOM_CHO_QUIZ_FILE = 'custom_cho_quiz.json'
 MEMORY_FILE = 'memory.json'
 GAMER_FILE = 'gamer.json'
-
 AMEP_PLAYER_FILE = 'AMEP/player.json'
 AMEP_MISSION_FILE = 'AMEP/mission.json'
+
+ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
@@ -37,6 +38,10 @@ lots_games = {}  # 제비뽑기
 
 
 # Commonly used
+
+
+def to_url(keyword):
+    return re.sub(' ', '%20', keyword)
 
 
 def read_json(address):
@@ -139,7 +144,7 @@ def daum_lotto(inning=''):
     day = tree.xpath('//span[@class="f_date"]//text()')
     if len(day) > 0:
         day = day[0][1:-3].split('.')  # (0000.00.00추첨) -> 0000.00.00
-        for i in range(0, 3):
+        for i in range(3):
             ret.insert(0, day[2-i])
     inning = tree.xpath('//span[@class="f_red"]//text()')
     if len(inning) > 0:
@@ -211,7 +216,7 @@ def cho(keyword):
 
 def cho_gen_lite(length):
     result = ''
-    for _ in range(0, length):
+    for _ in range(length):
         result += CHO_LITE_LIST[random.randint(0, 13)]
 
     return result
@@ -220,7 +225,7 @@ def cho_gen_lite(length):
 def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2, 3))):
     """genre : movie, music, animal, dic, game, people, book"""
     query = ''
-    for i in range(0, len(chos)):
+    for i in range(len(chos)):
         query += '%A4' + PARSED_CHO_LIST[CHO_LIST.index(chos[i])]
     if genre is None:
             page = requests.get('http://www.jaum.kr/index.php?w='+query)
@@ -457,7 +462,7 @@ def memory(author, *args):  # `기억
 
             mem = memories[key]
             contents = []
-            for i in range(0, len(mem)//3):
+            for i in range(len(mem)//3):
                 contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
             embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
             embed.set_author(name=BOTNAME + ' DB', url=URL, icon_url=ICON_URL)
@@ -600,7 +605,7 @@ class PlayingCard:
         cnt_a = list(map(lambda x: x.number, cards)).count('A')
         ret += cnt_a * 10
         if ret > 21:
-            for _ in range(0, cnt_a):
+            for _ in range(cnt_a):
                 ret -= 10
                 if ret <= 21:
                     break
@@ -672,7 +677,7 @@ class Blackjack:
         cnt_a = list(map(lambda x: x.number, cards)).count('A')
         ret += cnt_a * 10
         if ret > 21:
-            for _ in range(0, cnt_a):
+            for _ in range(cnt_a):
                 ret -= 10
                 if ret <= 21:
                     break
