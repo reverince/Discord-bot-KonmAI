@@ -28,7 +28,7 @@ def to_lodestone_href(keyword, option=None):
 
 
 def search_lodestone(keyword, option=None):
-    address = to_lodestone_href(keyword, 'recipe')
+    address = to_lodestone_href(keyword, option)
     page = requests.get(address)
     tree = html.fromstring(page.content.decode('utf-8'))
     results = tree.xpath('//div[@class="base_tb"]//tr/td[1]/a/text()')
@@ -50,9 +50,8 @@ def search_lodestone(keyword, option=None):
 def guide(keyword):  # 공식
 
     address = to_lodestone_href(keyword)
-    markdown = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
-    ret = discord.Embed(description=markdown, color=funcs.THEME_COLOR)
-    ret.set_author(name=funcs.BOTNAME, url=funcs.URL, icon_url=funcs.ICON_URL)
+    desc = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
+    ret = funcs.make_embed(desc=desc, by_me=True)
 
     return ret
 
@@ -76,11 +75,9 @@ def recipe(keyword):  # 레시피
             desc += f':small_orange_diamond: `{cnts[i]}` {names[i]}\n'
         for i in range(len(c_names)):
             desc += f':small_blue_diamond: `{c_cnts[i]}` {c_names[i]}\n'
-        ret = discord.Embed(title=title,
-                            description=desc, color=funcs.THEME_COLOR)
-        ret.set_author(name=funcs.BOTNAME,
-                       url=funcs.URL, icon_url=funcs.ICON_URL)
-        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
+        footer = '자료: 파이널판타지 14 공식 가이드'
+        ret = funcs.make_embed(title=title,
+                               desc=desc, by_me=True, footer=footer)
     else:
         ret = NO_RESULT_MESSAGE
 
@@ -100,11 +97,9 @@ def seller(keyword):  # 상점
         desc = ''
         for i in range(len(npcs)):
             desc += f':white_small_square: {npcs[i]} `{locations[i]}`\n'
-        ret = discord.Embed(title=title,
-                            description=desc, color=funcs.THEME_COLOR)
-        ret.set_author(name=funcs.BOTNAME,
-                       url=funcs.URL, icon_url=funcs.ICON_URL)
-        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
+        footer = '자료: 파이널판타지 14 공식 가이드'
+        ret = funcs.make_embed(title=title,
+                               desc=desc, by_me=True, footer=footer)
     else:
         ret = NO_RESULT_MESSAGE
 
@@ -153,12 +148,9 @@ def gathering(keyword):  # 채집
             else:
                 location = '　　`' + location + '`'
             desc += location + '\n'
-
-        ret = discord.Embed(title=title,
-                            description=desc, color=funcs.THEME_COLOR)
-        ret.set_author(name=funcs.BOTNAME,
-                       url=funcs.URL, icon_url=funcs.ICON_URL)
-        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
+        footer = '자료: 파이널판타지 14 공식 가이드'
+        ret = funcs.make_embed(title=title,
+                               desc=desc, by_me=True, footer=footer)
     else:
         ret = NO_RESULT_MESSAGE
 
@@ -176,10 +168,9 @@ def hunting(keyword):  # 토벌
 
         title = '**' + keyword + '** 출현 장소'
         desc = '[' + pos + '](' + href + ')'
-        ret = discord.Embed(title=title,
-                            description=desc, color=funcs.THEME_COLOR)
-        ret.set_footer(text='자료: 파이널판타지 14 인벤')
-        ret.set_image(url=img)
+        footer = '자료: 파이널판타지 14 인벤'
+        ret = funcs.make_embed(title=title,
+                               desc=desc, footer=footer, img=img)
     else:
         ret = NO_RESULT_MESSAGE
 
@@ -194,12 +185,10 @@ def wind(keyword):
         title = '**' + keyword + '** 풍맥의 샘'
         desc = ''
         for wind in winds[keyword]:
-            desc += f':white_small_square: {wind[0]}, {wind[1]}\n'
-        ret = discord.Embed(title=title,
-                            description=desc, color=funcs.THEME_COLOR)
-        ret.set_author(name=funcs.BOTNAME,
-                       url=funcs.URL, icon_url=funcs.ICON_URL)
-        ret.set_footer(text='자료: 파이널판타지 14 공식 가이드')
+            desc += f':white_small_square: `{wind[0]}`,\t`{wind[1]}`\n'
+        footer = '자료: 파이널판타지 14 공식 가이드'
+        ret = funcs.make_embed(title=title,
+                               desc=desc, by_me=True, footer=footer)
     else:
         ret = NO_RESULT_MESSAGE
 

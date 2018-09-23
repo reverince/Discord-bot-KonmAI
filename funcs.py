@@ -61,11 +61,24 @@ def write_json(address, dic):
         f.close()
 
 
-# TODO
+def make_embed(title=None, desc=None, by_me=False, footer=None, img=None):
+    ret = discord.Embed(title=title,
+                        description=desc, color=THEME_COLOR)
+    if by_me:
+        ret.set_author(name=BOTNAME,
+                       url=URL, icon_url=ICON_URL)
+    if footer is not None:
+        ret.set_footer(text=footer)
+    if img is not None:
+        ret.set_image(url=img)
+
+    return ret
+
+
 async def delete_message(message):
     try:
-        await bot.delete_message(ctx.message)
-    except:
+        await bot.delete_message(message)
+    except discord.Forbidden:
         pass
 
 
@@ -92,7 +105,11 @@ def find_name_by_id(id):
 
 def bignumrize(numstr):
     """Discord 이모지로 숫자 강조. Credit for Discord bot Ayana."""
-    ret = re.sub('0', ':zero:', re.sub('1', ':one:', re.sub('2', ':two:', re.sub('3', ':three:', re.sub('4', ':four:', re.sub('5', ':five:', re.sub('6', ':six:', re.sub('7', ':seven:', re.sub('8', ':eight:', re.sub('9', ':nine:', numstr))))))))))
+    NUM_EMOJIS = [':zero:', ':one:', ':two:', ':three:', ':four:',
+                  ':five:', ':six:', ':seven:', ':eight:', ':nine:']
+    ret = ''
+    for c in numstr:
+        ret += NUM_EMOJIS[int(c)] if c.isdigit() else c
 
     return ret
 
@@ -202,9 +219,13 @@ def zodiac_fortune(zodiac, period):
 
 
 BASE, CHO, JUNG = 44032, 588, 28
-CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
-CHO_LITE_LIST = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
-PARSED_CHO_LIST = ['%A1', '%A2', '%A4', '%A7', '%A8', '%A9', '%B1', '%B2', '%B3', '%B5', '%B6', '%B7', '%B8', '%B9', '%BA', '%BB', '%BC', '%BD', '%BE']
+CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ',
+            'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+CHO_LITE_LIST = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ',
+                 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+PARSED_CHO_LIST = ['%A1', '%A2', '%A4', '%A7', '%A8', '%A9',
+                   '%B1', '%B2', '%B3', '%B5', '%B6', '%B7', '%B8', '%B9',
+                   '%BA', '%BB', '%BC', '%BD', '%BE']
 
 
 def cho(keyword):
@@ -267,7 +288,10 @@ def jaum_quiz(genre=None):
     answers = []
     while len(answers) == 0:
         answers = jaum_search(genre, cho_gen_lite(random.randint(2, 3)))
-    answer = re.sub(r'\s+$', '', re.sub(r'^\s+', '', re.sub(r'(?i)[A-Z().]', '', random.choice(answers))))
+    answer = random.choice(answers)
+    answer = re.sub(r'\s+$', '',
+                    re.sub(r'^\s+', '',
+                           re.sub(r'(?i)[A-Z().]', '', answer)))
 
     print('정답 : '+answer)  # DEBUG
     return answer
@@ -317,6 +341,7 @@ class ChoQuiz:
     @staticmethod
     def end(channel):
         global cho_quizs
+
         if channel in cho_quizs:
             del cho_quizs[channel]
             ret = '초성퀴즈를 종료했어요.'
@@ -367,7 +392,7 @@ def pubg_profile(name, server='krjp'):
         month = str(time.gmtime().tm_mon)
         if len(month) < 2:
             month = '0' + month
-        response = requests.get('https://dak.gg/profile/'+name+'/'+year+'-'+month+'/'+server)
+        response = requests.get(f'https://dak.gg/profile/{name}/{year}-{month}/{server}')
 
     tree = html.fromstring(response.content)
     data = tree.xpath('//section[@class="solo modeItem"]//text()')
@@ -427,7 +452,8 @@ def gf_times(pd_time):
 def memory(author, *args):  # `기억
     """args: ['키워드', '내', '용', ...], memories: {'키워드': ['id', 'name', '내용'] * n}"""
     MEMORIZE_MESSAGE = ['기억해둘게요.', 'DB에 기록했어요.']
-    NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.', '기억에 없어요.', 'DB에 없는 기억이에요.']
+    NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.',
+                             '기억에 없어요.', 'DB에 없는 기억이에요.']
 
     memories = read_json(MEMORY_FILE)
 
@@ -472,7 +498,8 @@ def memory(author, *args):  # `기억
             contents = []
             for i in range(len(mem)//3):
                 contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
-            embed = discord.Embed(title=key, description='\n'.join(contents), color=THEME_COLOR)
+            embed = discord.Embed(title=key,
+                                  description='\n'.join(contents), color=THEME_COLOR)
             embed.set_author(name=BOTNAME + ' DB', url=URL, icon_url=ICON_URL)
             return embed
         else:
