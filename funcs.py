@@ -75,11 +75,12 @@ def make_embed(title=None, desc=None, by_me=False, footer=None, img=None):
     return ret
 
 
-async def delete_message(message):
-    try:
-        await bot.delete_message(message)
-    except discord.Forbidden:
-        pass
+async def delete_message(msg):
+    if msg is not None:
+        try:
+            await bot.delete_message(msg)
+        except discord.Forbidden:
+            pass
 
 
 def find_id_by_name(name):
@@ -753,13 +754,16 @@ class Blackjack:
 
 
 async def blackjack_dturn(player, channel):  # Dealer's turn
+    d_msg = None
     while True:
         if bj_games[player].dsum < 17:  # 딜러 히트
             await asyncio.sleep(1.0)
             if bj_games[player].cnt_dhit > 0:
-                await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_MORE))
+                await delete_message(d_msg)
+                d_msg = await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_MORE))
             else:
-                await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
+                await delete_message(d_msg)
+                d_msg = await bot.send_message(channel, random.choice(Blackjack.HIT_MESSAGES + Blackjack.HIT_MESSAGES_FIRST))
             bj_games[player].cnt_dhit += 1
             bj_games[player].d_draw()
             await asyncio.sleep(1.0)
@@ -767,17 +771,20 @@ async def blackjack_dturn(player, channel):  # Dealer's turn
                 await asyncio.sleep(1.0)
                 await bot.edit_message(bj_msgs[player], bj_games[player].result())
                 await asyncio.sleep(0.5)
+                await delete_message(d_msg)
                 await bot.send_message(channel, random.choice(Blackjack.BUST_MESSAGES_DEALER))
-                Blackjack.end(player, WIN)
+                Blackjack.end(player, Blackjack.WIN)
                 break
             else:
                 await bot.edit_message(bj_msgs[player], bj_games[player])
         else:  # 딜러 스탠드
             await asyncio.sleep(1.0)
             if bj_games[player].cnt_dhit > 0:
-                await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_HIT))
+                await delete_message(d_msg)
+                d_msg = await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_HIT))
             else:
-                await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_NOHIT))
+                await delete_message(d_msg)
+                d_msg = await bot.send_message(channel, random.choice(Blackjack.STAND_MESSAGES + Blackjack.STAND_MESSAGES_NOHIT))
             break
 
     if player in bj_games:
@@ -785,16 +792,19 @@ async def blackjack_dturn(player, channel):  # Dealer's turn
         await bot.edit_message(bj_msgs[player], bj_games[player].result())
         await asyncio.sleep(1.0)
         if bj_games[player].psum > bj_games[player].dsum:
+            await delete_message(d_msg)
             await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_PLAYER))
             if bj_games[player].psum != 21:
-                Blackjack.end(player, WIN)
+                Blackjack.end(player, Blackjack.WIN)
             else:
                 Blackjack.end(player, BLACKJACKED)
         elif bj_games[player].psum < bj_games[player].dsum:
+            await delete_message(d_msg)
             await bot.send_message(channel, random.choice(Blackjack.WIN_MESSAGES_DEALER))
-            Blackjack.end(player, LOSE)
+            Blackjack.end(player, Blackjack.LOSE)
         else:
+            await delete_message(d_msg)
             await bot.send_message(channel, random.choice(Blackjack.DRAW_MESSAGES))
-            Blackjack.end(player, DRAW)
+            Blackjack.end(player, Blackjack.DRAW)
 
     await bot.change_presence(game=discord.Game(name=GAME))
