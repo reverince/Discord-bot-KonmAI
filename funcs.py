@@ -115,111 +115,7 @@ def bignumrize(numstr):
     return ret
 
 
-'''
-def daum_search(keyword):
-    page = requests.get('http://dic.daum.net/search.do?q='+keyword)
-    tree = html.fromstring(page.content)
-
-    ret = ''
-    i = 1
-    while True:
-        ret += '\n'
-        word = tree.xpath('//div[@id="mArticle"]/div[1]/div[2]/div[2]/div['+str(i)+']/div[1]/strong[1]//text()')
-        if len(word) == 0:
-            break
-        ret += ' '.join(''.join(word).split()) + '\n'
-
-        meanings = []
-        j = 1
-        while True:
-            meaning = tree.xpath('//div[@id="mArticle"]/div[1]/div[2]/div[2]/div['+str(i)+']/ul/li['+str(j)+']//text()')
-            if len(meaning) == 0:
-                break
-            meaning.insert(1, ' ')
-            meanings.append(''.join(meaning))
-            meanings.append(' ')
-            j += 1
-        ret += ''.join(meanings[:-1]) + '\n'
-        i += 1
-
-    return ret
-
-
-def daum_realtime():
-    """1~10위 배열 반환"""
-    response = requests.get('https://www.daum.net/')
-    tree = html.fromstring(response.content)
-
-    word = tree.xpath('//span[@class="txt_issue"]//text()')
-    word = list(filter(lambda x: x != '\n', word))
-
-    ret = []
-    for i in range(0, 20, 2):
-        ret.append(word[i])
-
-    return ret
-
-
-def daum_lotto(inning=''):
-    """return [회차, 연, 월, 일, 번호...]"""
-    response = requests.get('https://search.daum.net/search?w=tot&q='+inning+'%20로또%20당첨%20번호')
-    tree = html.fromstring(response.content)
-
-    ret = tree.xpath('//div[@class="lottonum"]//text()')
-    ret = list(filter(lambda x: x not in [' ', '보너스'], ret))
-    day = tree.xpath('//span[@class="f_date"]//text()')
-    if len(day) > 0:
-        day = day[0][1:-3].split('.')  # (0000.00.00추첨) -> 0000.00.00
-        for i in range(3):
-            ret.insert(0, day[2-i])
-    inning = tree.xpath('//span[@class="f_red"]//text()')
-    if len(inning) > 0:
-        ret.insert(0, inning[0])
-
-    return ret
-
-
-def daum_exchange(keyword):
-    page = requests.get('https://search.daum.net/search?w=tot&q='+keyword)
-    tree = html.fromstring(page.content)
-
-    word = tree.xpath('//div[@class="stock_up inner_price"]/em//text()')
-    if len(word) == 0:
-        return None
-    rate = float(word[0])
-    amount_match = re.match(r'\d+', keyword)
-    if amount_match:
-        amount = int(amount_match.group(0))
-    else:
-        amount = 1
-    currency = re.search(r'[가-힣]+', keyword).group(0)
-    if amount_match and currency in ('엔', '엔화'):
-        rate /= 100
-
-    return round(amount * rate, 2)
-
-
-def zodiac_fortune(zodiac, period):
-    FORTUNE_ZODIACS = ['쥐띠', '소띠', '범띠', '토끼띠', '용띠', '뱀띠', '말띠', '양띠', '원숭이띠', '닭띠', '개띠', '돼지띠']
-    FORTUNE_PERIODS = ['오늘', '내일', '이번주', '이달', '올해']
-
-    if zodiac not in FORTUNE_ZODIACS:
-        return '알맞은 띠를 입력해 주세요.'
-    if period not in FORTUNE_PERIODS:
-        return '기간은 오늘/내일/이번주/이달/올해 중 하나로 입력해 주세요.'
-
-    address = 'https://search.daum.net/search?w=tot&q=' + zodiac + '%20운세'
-    page = requests.get(address)
-    tree = html.fromstring(page.content)
-
-    period = FORTUNE_PERIODS.index(period)
-    ret = tree.xpath('//p[@class="daily_fortune"]//text()')[period]
-
-    return ret
-'''
-
-
-BASE, CHO, JUNG = 44032, 588, 28
+HAN_BASE, CHO, JUNG = 44032, 588, 28
 CHO_LIST = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ',
             'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
 CHO_LITE_LIST = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ',
@@ -235,7 +131,7 @@ def cho(keyword):
     result = []
     for letter in split_keyword_list:
         if re.match('.*[가-힣]+.*', letter) is not None:
-            char_code = ord(letter) - BASE
+            char_code = ord(letter) - HAN_BASE
             cho_code = int(char_code / CHO)
             result.append(CHO_LIST[cho_code])
         else:
@@ -300,7 +196,7 @@ def jaum_quiz(genre=None):
 
 def josa(word, j):
     last_char = word[-1]
-    has_jong = True if (ord(last_char) - BASE) % 28 > 0 else False
+    has_jong = True if (ord(last_char) - HAN_BASE) % 28 > 0 else False
     if j in ['은', '는']:
         return '은' if has_jong else '는'
     elif j in ['이', '가']:
