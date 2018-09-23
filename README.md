@@ -1,6 +1,5 @@
 # Discord bot _KonmAI_
 
-초대 링크 : https://discordapp.com/oauth2/authorize?client_id=447531549030875140&scope=bot&permissions=523328
 
 ## 명령어
 

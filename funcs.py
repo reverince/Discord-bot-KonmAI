@@ -61,6 +61,14 @@ def write_json(address, dic):
         f.close()
 
 
+# TODO
+async def delete_message(message):
+    try:
+        await bot.delete_message(ctx.message)
+    except:
+        pass
+
+
 def find_id_by_name(name):
     members = list(bot.get_all_members())
     member_names = list(map(lambda x: x.name, members))
