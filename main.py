@@ -59,6 +59,8 @@ async def 도움(*args):
                              value='[공식 가이드](http://guide.ff14.co.kr/lodestone) 검색 링크를 만들어요. ` `공식 제멜 토마토 `')
             result.add_field(name='`레시피',
                              value='공식 가이드에서 아이템 제작 레시피를 검색해요. ` `레시피 고리갑옷 `')
+            result.add_field(name='`마물',
+                             value='[인벤](http://ff14.inven.co.kr)에서 마물 정보를 검색해요. ` `마물 아스왕 `')
             result.add_field(name='`상점',
                              value='공식 가이드에서 아이템 판매 NPC를 검색해요. ` `상점 질긴 가죽 `')
             result.add_field(name='`잡퀘',
@@ -66,9 +68,9 @@ async def 도움(*args):
             result.add_field(name='`채집',
                              value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
             result.add_field(name='`토벌 (WIP)',
-                             value='[인벤](http://ff14.inven.co.kr)에서 토벌수첩 몬스터가 어디 있는지 찾아 드려요. ` `토벌 무당벌레 `')
+                             value='인벤에서 토벌수첩 몬스터가 어디 있는지 찾아 드려요. ` `토벌 무당벌레 `')
             result.add_field(name='`풍맥 (WIP)',
-                             value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` `풍맥 홍옥해 `')
+                             value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` `풍맥 홍옥해 `\n풍맥 퀘스트는 아직이에요.')
 
         else:
             result = '그런 도움말은 없어요.'
@@ -84,15 +86,8 @@ async def 도움(*args):
                          value='(이 정도 쯤이야.)', inline=True)
         result.add_field(name='`골라',
                          value='배그할까 레식할까? ` `골라 배그 레식 `', inline=True)
-        '''
-        result.add_field(name='`사전', value='[Daum](https://daum.net) 사전에서 검색해요.', inline=True)
-        result.add_field(name='`실검', value='Daum 실시간 검색어 순위를 알려 드려요.', inline=True)
-        result.add_field(name='`로또', value='Daum에서 로또 당첨 번호를 검색해요.\n` `로또 800 `처럼 회차를 지정할 수 있어요.', inline=True)
-        result.add_field(name='`환율', value='Daum에서 환율을 검색해요.', inline=True)
-        result.add_field(name='`띠운세', value='[사주닷컴](http://sazoo.com) 띠별 운세를 점쳐볼 수 있어요.\n` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.', inline=True)
-        '''
         result.add_field(name='`초성',
-                         value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요. (유저 등록 개발중)', inline=True)
+                         value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` `초성 게임 5 `처럼 사용하세요. 끝내려면 ` `초성 끝 `을 입력하세요.\n(유저 등록 개발중)', inline=True)
         result.add_field(name='`배그',
                          value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
         result.add_field(name='`소전',
@@ -101,14 +96,18 @@ async def 도움(*args):
                          value='주사위를 던져요.\n` `주사위 2d6 `처럼 사용하세요.', inline=True)
         result.add_field(name='`제비',
                          value='당첨이 한 개 들어 있는 제비를 준비해요.\n` `제비 3 `처럼 시작하고 ` `제비 `로 뽑으세요.\n취소하려면 ` `제비 끝 `을 입력하세요.', inline=True)
+        #result.add_field(name='`알람',
+        #                 value='특정 시각 혹은 일정 시간 후에 메시지와 함께 멘션해 드려요. ` `알람 23:59 자라 ` ` `알람 240 컵라면 `')
         result.add_field(name='`기억',
-                         value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요. ` `기억 삭제 원주율`로 기억을 지울 수 있어요.', inline=True)
+                         value='키워드에 관한 내용을 DB에 기억해요.\n` `기억 원주율 3.14159265 `로 기억에 남기고 ` `기억 원주율 `로 불러오세요.\n` `기억 랜덤 `을 입력하면 아무 기억이나 불러와요.\n` `기억 삭제 원주율`로 기억을 지울 수 있어요.', inline=True)
+        '''
         result.add_field(name='`게이머 (WIP)',
                          value='게이머 관련 업무를 수행해요. `등록` / `나`', inline=True)
         result.add_field(name='`코인 (WIP)',
                          value='게이머 코인 관련 업무를 수행해요. `초기화` / `이체`', inline=True)
+        '''
         result.add_field(name='`블랙잭',
-                         value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요. 코인을 걸 수 있어요.', inline=True)
+                         value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` `H `, 스탠드는 ` `S `를 입력하세요.\n코인을 걸 수 있어요.', inline=True)
         # 빈칸
         result.add_field(name='\u200B', value='\u200B')
         # 파판 명령어 도움
@@ -160,106 +159,22 @@ async def 계산(ctx, *args):
 
 @bot.command(pass_context=True)
 async def 골라(ctx, *args):
+    CHOICE_MESSAGES = ['**'+choice+'**'+josa(choice, '가')+' 어떨까요? :thinking:',
+                       '저라면 **'+choice+'**예요.',
+                       '저는 **'+choice+'**'+josa(choice, '를')+' 추천할게요! :relaxed:',
+                       '저라면 **'+choice+'**'+josa(choice, '를')+' 선택하겠어요. :relaxed:',
+                       '**'+choice+'**'+josa(choice, '로')+' 가죠. :sunglasses:',
+                       '답은 **'+choice+'**'+josa(choice, '로')+' 정해져 있어요. :sunglasses:']
     if len(args) > 1:
         choice = random.choice(args) if '히오스' not in args else '히오스'
-        CHOICE_MESSAGES = ['**'+choice+'**'+josa(choice, '가')+' 어떨까요? :thinking:',
-                           '저라면 **'+choice+'**예요.',
-                           '저는 **'+choice+'**'+josa(choice, '를')+' 추천할게요! :relaxed:',
-                           '저라면 **'+choice+'**'+josa(choice, '를')+' 선택하겠어요. :relaxed:',
-                           '**'+choice+'**'+josa(choice, '로')+' 가죠. :sunglasses:',
-                           '답은 **'+choice+'**'+josa(choice, '로')+' 정해져 있어요. :sunglasses:']
-
-        result = ctx.message.author.mention+'님, ' + random.choice(CHOICE_MESSAGES)
+        msg = random.choice(CHOICE_MESSAGES)
+        result = ctx.message.author.mention+'님, ' + msg
     elif len(args) == 1:
         result = ':sweat:'
     else:
         result = '어떤 것들 중에서 고를지 다시 알려주세요.'
 
     await bot.say(result)
-
-
-'''
-@bot.command()
-async def 사전(*args):
-    """Daum 사전 검색"""
-    if len(args) > 0:
-        result = daum_search(' '.join(args))
-    else:
-        result = '검색 키워드를 입력해 주세요.'
-
-    await bot.say(result)
-
-
-@bot.command()
-async def 실검():
-    """Daum 실시간 검색어 순위"""
-    ranks = daum_realtime()
-    link = 'https://search.daum.net/search?w=tot&q='
-    tm = time.gmtime()
-    tm_str = '{}년 {}월 {}일 {}:{}:{}'.format(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour+9, tm.tm_min, tm.tm_sec)
-
-    result = discord.Embed(title='Daum 실시간 검색어 순위', url="https://www.daum.net/", description=tm_str+' 기준', color=THEME_COLOR)
-    for i in range(10):
-        result.add_field(name=str(i+1)+'위', value='[{}]({})'.format(ranks[i], link+re.sub(' ', '%20', ranks[i])), inline=True if i > 0 else False)
-
-    await bot.say(embed=result)
-
-
-@bot.command()
-async def 로또(*args):
-    """Daum 로또 당첨 번호 검색"""
-    success = True
-    if len(args) > 0:
-        if args[0].isnumeric():
-            inning = args[0]
-            data = daum_lotto(inning)
-        else:
-            result = '회차는 숫자로만 입력해 주세요.'
-            success = False
-    else:
-        data = daum_lotto()
-
-    if success:
-        result = discord.Embed(description=data[1]+'년 '+data[2]+'월 '+data[3]+'일 추첨', color=THEME_COLOR)
-        result.set_author(name='로또 추첨 번호 by 다음', url='https://search.daum.net/search?w=tot&q='+data[0]+'%20로또%20당첨%20번호', icon_url=ICON_URL)
-        result.add_field(name=data[0], value=bignumrize('  '.join(data[4:-1])+' :small_orange_diamond: '+data[-1]))
-
-        await bot.say(embed=result)
-    else:
-        await bot.say(result)
-
-
-@bot.command()
-async def 환율(*args):
-    """Daum 환율 검색"""
-    if len(args) > 0:
-        keyword = ' '.join(args)
-        won = daum_exchange(keyword)
-        if won is not None:
-            result = keyword+josa(keyword, '는')+' '+str(won)+'원이에요.'
-        else:
-            result = '결과를 찾지 못했어요.'
-    else:
-        result = '원으로 바꿀 금액과 단위를 입력해 주세요.'
-
-    await bot.say(result)
-
-
-@bot.command(pass_context=True)
-async def 띠운세(ctx, *args):
-    """띠별 운세 오늘/내일/이번주/이번달/올해"""
-    if len(args) > 0:
-        zodiac = args[0]
-        if len(args) > 1:
-            period = args[1]
-        else:
-            period = 1  # 오늘
-        result = zodiac_fortune(zodiac, period)
-    else:
-        result = '` `띠운세 쥐띠 오늘/내일/이번주/이달/올해 `처럼 입력해 주세요.'
-
-    await bot.say(result)
-'''
 
 
 @bot.command(pass_context=True)
@@ -318,29 +233,29 @@ async def 배그(*args):
             result.add_field(name='등급',
                              value=ratings['solo-grade'], inline=True)
             result.add_field(name='점수',
-                             value='{} ({})'.format(ratings['solo-score'], ratings['solo-rank']), inline=True)
+                             value=f'{ratings["solo-score"]} ({ratings["solo-rank"]})', inline=True)
             result.add_field(name='승점',
-                             value='{} ({})'.format(ratings['solo-win-rating'], ratings['solo-win-top']), inline=True)
+                             value=f'{ratings["solo-win-rating"]} ({ratings["solo-win-top"]})', inline=True)
             result.add_field(name='승률',
-                             value='{} ({})'.format(ratings['solo-winratio'], ratings['solo-winratio-top']), inline=True)
+                             value=f'{ratings["solo-winratio"]} ({ratings["solo-winratio-top"]})', inline=True)
             result.add_field(name='TOP10',
-                             value='{} ({})'.format(ratings['solo-top10'], ratings['solo-top10-top']), inline=True)
+                             value=f'{ratings["solo-top10"]} ({ratings["solo-top10-top"]})', inline=True)
             result.add_field(name='여포',
-                             value='{} ({})'.format(ratings['solo-kill-rating'], ratings['solo-kill-top']), inline=True)
+                             value=f'{ratings["solo-kill-rating"]} ({ratings["solo-kill-top"]})', inline=True)
             result.add_field(name='K/D',
-                             value='{} ({})'.format(ratings['solo-kd'], ratings['solo-kd-top']), inline=True)
+                             value=f'{ratings["solo-kd"]} ({ratings["solo-kd-top"]})', inline=True)
             result.add_field(name='평균 데미지',
-                             value='{} ({})'.format(ratings['solo-avgdmg'], ratings['solo-avgdmg-top']), inline=True)
+                             value=f'{ratings["solo-avgdmg"]} ({ratings["solo-avgdmg-top"]})', inline=True)
             result.add_field(name='최대 킬',
-                             value='{} ({})'.format(ratings['solo-mostkills'], ratings['solo-mostkills-top']), inline=True)
+                             value=f'{ratings["solo-mostkills"]} ({ratings["solo-mostkills-top"]})', inline=True)
             result.add_field(name='헤드샷',
-                             value='{} ({})'.format(ratings['solo-headshots'], ratings['solo-headshots-top']), inline=True)
+                             value=f'{ratings["solo-headshots"]} ({ratings["solo-headshots-top"]})', inline=True)
             result.add_field(name='저격',
-                             value='{} ({})'.format(ratings['solo-longest'], ratings['solo-longest-top']), inline=True)
+                             value=f'{ratings["solo-longest"]} ({ratings["solo-longest-top"]})', inline=True)
             result.add_field(name='게임 수',
-                             value='{} ({})'.format(ratings['solo-games'], ratings['solo-games-top']), inline=True)
+                             value=f'{ratings["solo-games"]} ({ratings["solo-games-top"]})', inline=True)
             result.add_field(name='생존',
-                             value='{} ({})'.format(ratings['solo-survived'], ratings['solo-survived-top']), inline=True)
+                             value=f'{ratings["solo-survived"]} ({ratings["solo-survived-top"]})', inline=True)
 
             await bot.say(embed=result)
         else:
@@ -353,30 +268,27 @@ async def 배그(*args):
 async def 소전(*args):
     """소녀전선 제조시간 검색"""
     if len(args) > 0:
-        if len(args[0]) in [4, 5]:
+        if len(args[0]) in [3, 4]:
             pd_time = args[0]
-
-            await bot.say(gf_times(pd_time))
+            result = gf_time(pd_time)
+        else:
+            result = '제조시간을 `340` 혹은 `0340`처럼 입력해 주세요.'
     else:
-        await bot.say('제조시간을 입력해 주세요.')
+        result = '제조시간을 입력해 주세요.'
+
+    await bot.say(result)
 
 
 @bot.command(pass_context=True)
 async def 주사위(ctx, *args):
-    try:
-        if len(args) > 0:
-            cnt, side = [int(x) for x in args[0].split('d')]
-        else:  # 2d6
-            cnt, side = 2, 6
+    if len(args) > 0:
+        cnt, side = [int(x) for x in args[0].split('d')]
+    else:  # 2d6
+        cnt, side = 2, 6
+    result = roll_dice(cnt, side, ctx.message.author.mention)
 
-        result = []
-        for _ in range(cnt):
-            result.append(str(random.randint(1, side)))
-
-        await delete_message(ctx.message)
-        await bot.say(ctx.message.author.mention+'님의 '+str(cnt)+'d'+str(side)+' 주사위 결과 : '+', '.join(result)+' ('+str(sum([int(x) for x in result]))+')')
-    except ValueError:
-        await bot.say('` `주사위 2d6 `처럼 입력해 주세요. 2는 주사위 개수, 6은 주사위 면수예요.')
+    await delete_message(ctx.message)
+    await bot.say(result)
 
 
 @bot.command(pass_context=True)
@@ -384,7 +296,7 @@ async def 제비(ctx, *args):
     channel = ctx.message.channel
 
     if len(args) > 0:
-        if args[0].isnumeric():
+        if args[0].isdigit():
             if channel not in lots_games.keys():
                 lots_games[channel] = [True] + [False] * (int(args[0]) - 1)
                 random.shuffle(lots_games[channel])
@@ -404,9 +316,12 @@ async def 제비(ctx, *args):
             result = '제비 개수를 입력해 주세요.'
         else:
             lot = lots_games[channel].pop()
+            result = ctx.message.author.mention + '님, '
             if lot:
                 del lots_games[channel]
-            result = ctx.message.author.mention+'님, **당첨**! :tada:' if lot else ctx.message.author.mention+'님, 꽝. :smirk:'
+                result += '**당첨**! :tada:'
+            else:
+                result += '꽝. :smirk:'
 
     await bot.say(result)
 
@@ -487,7 +402,8 @@ async def 블랙잭(ctx, *args):
             bj_games[player] = Blackjack(player)
 
         if game_started:
-            await bot.change_presence(game=discord.Game(name=player.name+josa(player.name, '과')+' 블랙잭'))
+            game = discord.Game(name=player.name+josa(player.name, '과')+' 블랙잭')
+            await bot.change_presence(game=game)
             bj_msgs[player] = await bot.say(bj_games[player])
             if bj_games[player].psum == 21:
                 await asyncio.sleep(0.5)
@@ -556,6 +472,20 @@ async def 레시피(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
         result = ffxiv.recipe(keyword)
+    else:
+        result = ENTER_KEYWORD_MESSAGE
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
+async def 마물(*args):
+    if len(args) > 0:
+        keyword = ' '.join(args)
+        result = ffxiv.elite(keyword)
     else:
         result = ENTER_KEYWORD_MESSAGE
 

@@ -3,5 +3,4 @@ goorm.manifest
 __pycache__
 .env
 
-gamer.json
-memory.json
+json/

@@ -21,19 +21,19 @@ THEME_COLOR = 0x00a0ee
 URL = 'https://discord.gg/E6eXnpJ'
 ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
-CUSTOM_CHO_QUIZ_FILE = 'custom_cho_quiz.json'
-MEMORY_FILE = 'memory.json'
-GAMER_FILE = 'gamer.json'
-AMEP_PLAYER_FILE = 'AMEP/player.json'
-AMEP_MISSION_FILE = 'AMEP/mission.json'
+GF_TIME_FILE = 'gf_time.json'
+
+CUSTOM_CHO_QUIZ_FILE = 'json/custom_cho_quiz.json'
+GAMER_FILE = 'json/gamer.json'
+MEMORY_FILE = 'json/memory.json'
 
 ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
-cho_quizs = {}  # 초성퀴즈
 bj_games = {}  # 블랙잭
 bj_msgs = {}  # 블랙잭 메시지
+cho_quizs = {}  # 초성퀴즈
 lots_games = {}  # 제비뽑기
 
 
@@ -439,15 +439,33 @@ def pubg_profile(name, server='krjp'):
     return ret
 
 
-def gf_times(pd_time):
-    GF_TIMES = {'00:20': ['M1911', '나강 리볼버', 'P38'], '00:22': ['PPK'], '00:25': ['FNP-9', 'MP-446'], '00:28': ['USP Compact', 'Bren Ten'], '00:30': ['P08', 'C96'], '00:35': ['92식', 'P99'], '00:40': ['아스트라 리볼버', 'M9', '마카로프'], '00:45': ['토카레프'], '00:50': ['콜트 리볼버', 'Mk23'], '00:52': ['스핏파이어'], '00:53': ['K5'], '00:55': ['P7', '스테츠킨'], '01:00': ['웰로드 MKII'], '01:02': ['컨텐더'], '01:05': ['M950A', 'NZ75'], '01:10': ['그리즐리 Mk V', 'IDW', 'PP-2000'], '01:20': ['Spectre M4', 'M45'], '01:25': ['64식'], '01:30': ['MP40', '베레타 38형', 'M3'], '01:40': ['스텐 Mk.II', '마이크로 우지'], '01:50': ['F1', 'PPSh-41'], '02:00': ['MAC-10', '스콜피온'], '02:05': ['Z-62'], '02:10': ['PPS-43'], '02:15': ['UMP-9', 'UMP-45'], '02:18': ['시프카', 'PP-19-01'], '02:20': ['MP5', 'PP-90'], '02:25': ['수오미'], '02:28': ['C-MS'], '02:30': ['톰슨', 'G36C'], '02:33': ['SR-3MP'], '02:35': ['벡터', '79식'], '02:40': ['갈릴', 'SIG-510'], '02:45': ['F2000', '63식'], '02:50': ['L85A1', 'G3'], '03:00': ['StG44'], '03:10': ['OTs-12', 'G43', 'FN-49'], '03:15': ['ARX-160'], '03:20': ['AK-47', 'FNC', 'BM59'], '03:25': ['56-1식', 'XM8'], '03:30': ['AS Val', 'FAMAS', 'TAR-21', '시모노프', 'SVT-38'], '03:35': ['9A-91'], '03:40': ['G36', '리베롤:heart:', 'M14', 'SV-98'], '03:45': ['FAL'], '03:48': ['T91'], '03:50': ['95식', '97식', '한양조88식', 'OTs-44(중형제조)'], '03:52': ['K2'], '03:53': ['MDR'], '03:55': ['HK416'], '03:58': ['RFB'], '04:00': ['M1 개런드'], '04:04': ['G11'], '04:05': ['G41', 'Zas M21'], '04:09': ['AN-94'], '04:10': ['모신나강', 'T-5000'], '04:12': ['AK-12'], '04:15': ['SVD'], '04:20': ['PSG-1(중형제조)', 'G28(중형제조)'], '04:25': ['스프링필드'], '04:30': ['PTRD', 'PzB39(중형제조)'], '04:38': ['카르카노 M1891'], '04:40': ['Kar98k'], '04:42': ['카르카노 M91/38'], '04:45': ['NTW-20'], '04:50': ['WA2000', 'AAT-52', 'FG42'], '04:52': ['IWS 2000'], '04:55': ['M99'], '05:00': ['리엔필드', 'MG34', 'DP28'], '05:10': ['LWMMG'], '05:20': ['브렌'], '05:40': ['M1919A4'], '05:50': ['MG42'], '06:10': ['M2HB', 'M60'], '06:15': ['80식'], '06:20': ['Mk48', 'AEK-999'], '06:25': ['M1918', '아멜리'], '06:30': ['PK', 'MG3'], '06:35': ['네게브'], '06:40': ['MG4'], '06:45': ['MG5'], '06:50': ['PKP'], '07:15': ['NS2000'], '07:20': ['M500'], '07:25': ['KS-23'], '07:30': ['RMB-93', 'M1897'], '07:40': ['M590', 'SPAS-12'], '07:45': ['M37'], '07:50': ['Super-Shorty'], '07:55': ['USAS-12'], '08:00': ['KSG'], '08:05': ['Saiga-12'], '08:10': ['S.A.T.8']}
+def gf_time(pd_time):
+    gf_times = read_json(GF_TIME_FILE)
 
     if len(pd_time) == 3:  # 340
-        pd_time = '0' + pd_time[0] + ':' + pd_time[1:2]
+        pd_time = '0' + pd_time[0] + ':' + pd_time[1:3]
     if len(pd_time) == 4:  # 0340
         pd_time = pd_time[0:2] + ':' + pd_time[2:4]
+    ret = '제조시간이 **' + pd_time + '**인 전술인형: ' + ', '.join(gf_times[pd_time])
 
-    return '제조시간이 **'+pd_time+'**인 전술인형: '+', '.join(GF_TIMES[pd_time])
+    return ret
+
+
+def roll_dice(cnt, side, mention=None):  # `주사위
+    try:
+        dice = []
+        for _ in range(cnt):
+            dice.append(random.randint(1, side))
+
+        ret = f'{mention}님의 ' if mention is not None else ''
+        ret += f'{str(cnt)}d{str(side)} 주사위 결과 : '
+        ret += ', '.join([str(x) for x in dice])
+        ret += ' (' + str(sum(dice)) + ')'
+    except ValueError:
+        ret = f'{mention}님, ' if mention is not None else ''
+        ret += '` `주사위 2d6 `처럼 입력해 주세요. `2`는 주사위 개수, `6`은 주사위 면수예요.'
+
+    return ret
 
 
 def memory(author, *args):  # `기억

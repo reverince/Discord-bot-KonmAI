@@ -7,8 +7,9 @@ import requests
 
 import funcs
 
-JOB_NPC_FILE = 'FFXIV/job_npc.json'
+ELITE_FILE = 'FFXIV/elite.json'
 HUNTING_FILE = 'FFXIV/hunting.json'
+JOB_NPC_FILE = 'FFXIV/job_npc.json'
 WIND_FILE = 'FFXIV/wind.json'
 WIND_QUEST_FILE = 'FFXIV/wind_quest.json'
 
@@ -47,7 +48,7 @@ def search_lodestone(keyword, option=None):
 # For Commands
 
 
-def guide(keyword):  # 공식
+def guide(keyword):  # `공식
 
     address = to_lodestone_href(keyword)
     desc = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
@@ -56,7 +57,7 @@ def guide(keyword):  # 공식
     return ret
 
 
-def recipe(keyword):  # 레시피
+def recipe(keyword):  # `레시피
 
     tree = search_lodestone(keyword, 'recipe')
     if tree is not None:
@@ -84,7 +85,27 @@ def recipe(keyword):  # 레시피
     return ret
 
 
-def seller(keyword):  # 상점
+def elite(keyword):  # `마물
+
+    elites = funcs.read_json(ELITE_FILE)
+    if keyword in elites:
+        elite = elites[keyword]
+        title = '마물 **' + keyword + '**'
+        footer = '자료: 파이널 판타지 14 인벤'
+        img = elite["img"]
+        ret = funcs.make_embed(title=title,
+                               by_me=True, footer=footer, img=img)
+        ret.add_field(name='등급', value=elite["grade"])
+        ret.add_field(name='지역', value=elite["location"])
+        ret.add_field(name='출현 주기', value=elite["period"])
+        ret.add_field(name='소환 조건', value=elite["condition"])
+    else:
+        ret = NO_RESULT_MESSAGE
+
+    return ret
+
+
+def seller(keyword):  # `상점
 
     tree = search_lodestone(keyword)
     if tree is not None:
@@ -106,10 +127,9 @@ def seller(keyword):  # 상점
     return ret
 
 
-def job_quest(keyword):  # 잡퀘
+def job_quest(keyword):  # `잡퀘
 
     job_npcs = funcs.read_json(JOB_NPC_FILE)
-    print(keyword)
 
     if keyword in job_npcs:
         name = job_npcs[keyword]['name']
@@ -121,7 +141,7 @@ def job_quest(keyword):  # 잡퀘
     return ret
 
 
-def gathering(keyword):  # 채집
+def gathering(keyword):  # `채집
 
     # TODO
     for substr in ['샤드', '크리스탈', '클러스터']:
@@ -134,9 +154,10 @@ def gathering(keyword):  # 채집
         path = '//div[@class="view_base bdb_n"]'
         regions = tree.xpath(path + '//p//span//text()')
         areas = tree.xpath(path + '//p//b//text()')
-        locations = tree.xpath(path + '//text()')[1:]
+        locations = tree.xpath(path + '//text()')
         locations = [x.strip() for x in locations]
-        locations = list(filter(lambda x: len(x) > 0, locations))
+        # locations = ['위치 정보', ...]
+        locations = list(filter(lambda x: len(x) > 0, locations))[1:]
 
         title = '**' + keyword + '**의 채집 장소'
         desc = ''
@@ -157,7 +178,7 @@ def gathering(keyword):  # 채집
     return ret
 
 
-def hunting(keyword):  # 토벌
+def hunting(keyword):  # `토벌
 
     huntings = funcs.read_json(HUNTING_FILE)
 
@@ -169,15 +190,14 @@ def hunting(keyword):  # 토벌
         title = '**' + keyword + '** 출현 장소'
         desc = '[' + pos + '](' + href + ')'
         footer = '자료: 파이널판타지 14 인벤'
-        ret = funcs.make_embed(title=title,
-                               desc=desc, footer=footer, img=img)
+        ret = funcs.make_embed(title=title, desc=desc, footer=footer, img=img)
     else:
         ret = NO_RESULT_MESSAGE
 
     return ret
 
 
-def wind(keyword):
+def wind(keyword):  # `풍맥
 
     winds = funcs.read_json(WIND_FILE)
 
