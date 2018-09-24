@@ -27,7 +27,8 @@ CUSTOM_CHO_QUIZ_FILE = 'json/custom_cho_quiz.json'
 GAMER_FILE = 'json/gamer.json'
 MEMORY_FILE = 'json/memory.json'
 
-ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요'
+ENTER_DIGIT_MESSAGE = '알맞은 값을 입력해 주세요.'
+ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요.'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
@@ -38,6 +39,10 @@ lots_games = {}  # 제비뽑기
 
 
 # Commonly used
+
+
+def enter_message(what):
+    return '검색할 ' + what + josa(what, "를") + ' 입력해 주세요.'
 
 
 def to_url(keyword):

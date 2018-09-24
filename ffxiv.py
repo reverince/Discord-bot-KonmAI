@@ -8,6 +8,7 @@ import requests
 import funcs
 
 ELITE_FILE = 'FFXIV/elite.json'
+GUILD_QUEST_FILE = 'FFXIV/guild_quest.json'
 HUNTING_FILE = 'FFXIV/hunting.json'
 JOB_NPC_FILE = 'FFXIV/job_npc.json'
 WIND_FILE = 'FFXIV/wind.json'
@@ -67,7 +68,7 @@ def recipe(keyword):  # `레시피
         cnts = tree.xpath(path + '/ul[1]//li//p/text()')
         names = tree.xpath(path + '/ul[1]//li//p//b/a/text()')
         # 재료 크리스탈
-        c_cnts = tree.xpath(path + '/ul[2]//li//p//text()')
+        c_cnts = tree.xpath(path + '/ul[2]//li//p/text()')
         c_names = tree.xpath(path + '/ul[2]//li//p//b/a/text()')
 
         title = '**' + keyword + '**의 제작 레시피'
@@ -123,6 +124,25 @@ def seller(keyword):  # `상점
                                desc=desc, by_me=True, footer=footer)
     else:
         ret = NO_RESULT_MESSAGE
+
+    return ret
+
+
+def guild_quest(level):  # `의뢰
+
+    guild_quests = funcs.read_json(GUILD_QUEST_FILE)
+
+    ret = '길드 의뢰를 찾지 못했어요.'
+    for lvl in range(level, 0, -1):
+        lvl = str(lvl)
+        if lvl in guild_quests:
+            title = '**' + lvl + '**레벨 용병업 의뢰 수주 장소'
+            desc = ''
+            for loc in guild_quests[lvl]["mercernary"]:
+                desc += f':white_small_square: {loc}\n'
+            ret = funcs.make_embed(title=title,
+                                   desc=desc, by_me=True)
+            break
 
     return ret
 

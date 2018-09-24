@@ -36,7 +36,7 @@ async def on_message(message):
     # 초성퀴즈 메시지 처리
     cho_quiz = ChoQuiz.find(channel)
     if cho_quiz is not None:
-        if re.sub(' ', '', message.content) == re.sub(' ', '', cho_quiz.answer):  # 공백 무시
+        if re.sub(' ', '', message.content) == re.sub(' ', '', cho_quiz.answer):
             await bot.send_message(channel, '**{}**님의 [**{}**] 정답! :white_check_mark:'.format(message.author.mention, cho_quiz.answer))
             result = cho_quiz.correct(channel)
             await bot.send_message(channel, result)
@@ -63,13 +63,15 @@ async def 도움(*args):
                              value='[인벤](http://ff14.inven.co.kr)에서 마물 정보를 검색해요. ` `마물 아스왕 `')
             result.add_field(name='`상점',
                              value='공식 가이드에서 아이템 판매 NPC를 검색해요. ` `상점 질긴 가죽 `')
+            result.add_field(name='`의뢰',
+                             value='해당 레벨의 용병업 의뢰를 받을 수 있는 곳을 알려 드려요. ` `의뢰 35 `')
             result.add_field(name='`잡퀘',
                              value='잡 퀘스트 NPC 위치를 알려 드려요. ` `잡퀘 전사`\n창천, 홍련 추가 직업은 아직 지원되지 않아요.')
             result.add_field(name='`채집',
                              value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
-            result.add_field(name='`토벌 (WIP)',
+            result.add_field(name='`토벌',
                              value='인벤에서 토벌수첩 몬스터가 어디 있는지 찾아 드려요. ` `토벌 무당벌레 `')
-            result.add_field(name='`풍맥 (WIP)',
+            result.add_field(name='`풍맥',
                              value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` `풍맥 홍옥해 `\n풍맥 퀘스트는 아직이에요.')
 
         else:
@@ -126,7 +128,7 @@ async def 더해(ctx, *args):
         result = sum(list(map(int, args)))
         result = ' + '.join(args) + ' = **' + str(result) + '**'
     except ValueError:
-        result = '숫자를 입력해 주세요.'
+        result = ENTER_DIGIT_MESSAGE
 
     await delete_message(ctx.message)
     await bot.say(ctx.message.author.mention+'님, '+result)
@@ -138,7 +140,7 @@ async def 빼(ctx, *args):
         result = int(args[0]) - sum(list(map(int, args[1:])))
         result = ' - '.join(args) + ' = **' + str(result) + '**'
     except ValueError:
-        result = '숫자를 입력해 주세요.'
+        result = ENTER_DIGIT_MESSAGE
 
     await delete_message(ctx.message)
     await bot.say(ctx.message.author.mention+'님, '+result)
@@ -274,7 +276,7 @@ async def 소전(*args):
         else:
             result = '제조시간을 `340` 혹은 `0340`처럼 입력해 주세요.'
     else:
-        result = '제조시간을 입력해 주세요.'
+        result = enter_message('제조시간')
 
     await bot.say(result)
 
@@ -510,12 +512,32 @@ async def 상점(*args):
 
 
 @bot.command()
+async def 의뢰(*args):
+    if len(args) > 0:
+        if len(args) == 1:
+            if args[0].isdigit():
+                level = int(args[0])
+                result = ffxiv.guild_quest(level)
+            else:
+                result = ENTER_DIGIT_MESSAGE
+        else:
+            result = ':confused:'
+    else:
+        result = enter_message('레벨')
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+
+
+@bot.command()
 async def 잡퀘(*args):
     if len(args) > 0:
         keyword = ' '.join(args)
         result = ffxiv.job_quest(keyword)
     else:
-        result = '검색할 잡 이름을 입력해 주세요.'
+        result = enter_message('잡 이름')
 
     await bot.say(result)
 
@@ -540,7 +562,7 @@ async def 토벌(*args):
         keyword = ' '.join(args)
         result = ffxiv.hunting(keyword)
     else:
-        result = '검색할 몬스터 이름을 입력해 주세요.'
+        result = enter_message('몬스터 이름')
 
     if type(result) is str:
         await bot.say(result)
@@ -554,7 +576,7 @@ async def 풍맥(*args):
         keyword = ' '.join(args)
         result = ffxiv.wind(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = enter_message('지역 이름')
 
     if type(result) is str:
         await bot.say(result)
