@@ -67,6 +67,8 @@ async def 도움(*args):
                              value='해당 레벨의 용병업 의뢰를 받을 수 있는 곳을 알려 드려요. ` `의뢰 35 `')
             result.add_field(name='`잡퀘',
                              value='잡 퀘스트 NPC 위치를 알려 드려요. ` `잡퀘 전사`\n창천, 홍련 추가 직업은 아직 지원되지 않아요.')
+            result.add_field(name='`장비(WIP)',
+                             value='상점에서 파는 채집·제작직 최적 장비를 알려 드려요. ` `장비 광부 43`\n판매 NPC는 ` `상점 `으로 검색하면 여러 곳이 있어요.')
             result.add_field(name='`채집',
                              value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
             result.add_field(name='`토벌',
@@ -533,13 +535,31 @@ async def 의뢰(*args):
 
 @bot.command()
 async def 잡퀘(*args):
-    if len(args) > 0:
-        keyword = ' '.join(args)
+    if len(args) == 1:
+        keyword = args[0]
         result = ffxiv.job_quest(keyword)
     else:
         result = enter_message('잡 이름')
 
     await bot.say(result)
+
+
+@bot.command()
+async def 장비(*args):
+    if len(args) == 2:
+        job = args[0]
+        if args[1].isdigit():
+            level = int(args[1])
+            result = ffxiv.tool(job, level)
+        else:
+            result = ENTER_DIGIT_MESSAGE
+    else:
+        result = enter_message('잡 이름과 레벨')
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
 
 
 @bot.command()
