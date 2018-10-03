@@ -42,7 +42,7 @@ lots_games = {}  # 제비뽑기
 
 
 def enter_message(what):
-    return '검색할 ' + what + josa(what, "를") + ' 입력해 주세요.'
+    return '검색할 ' + what + josa(what, '를') + ' 입력해 주세요.'
 
 
 def to_url(keyword):
@@ -370,7 +370,9 @@ def roll_dice(cnt, side, mention=None):  # `주사위
 
 
 def memory(author, *args):  # `기억
-    """args: ['키워드', '내', '용', ...], memories: {'키워드': ['id', 'name', '내용'] * n}"""
+    """args: ['키워드', '내', '용', ...],
+    memories: {'키워드': {'name': '', 'content': ''}, ...}"""
+
     MEMORIZE_MESSAGE = ['기억해둘게요.', 'DB에 기록했어요.']
     NOT_IN_MEMORY_MESSAGE = ['기억을 찾지 못했어요.', '그런 기억은 없어요.',
                              '기억에 없어요.', 'DB에 없는 기억이에요.']
@@ -378,54 +380,54 @@ def memory(author, *args):  # `기억
     memories = read_json(MEMORY_FILE)
 
     if len(args) > 1:
-        if args[0] == '삭제':
-            if args[1] in memories:
-                mem = memories[args[1]]
-                if author.id in mem[::3]:
-                    i = mem.index(author.id)
-                    for _ in range(3):
-                        del memories[args[1]][i]
+        keyword = args[0]
+        if keyword == '삭제':
+            keyword = args[1]
+            if keyword in memories:
+                if author.id in memories[keyword]:
+                    del memories[keyword][author.id]
+                    if len(memories[keyword].keys()) == 0:
+                        del memories[keyword]
+                    ret = '기억에서 지웠어요.'
                 else:
-                    return '그 키워드에 대한 '+author.name+'님의 기억은 없어요.'
+                    ret = '그 키워드에 대한 ' + author.name + '님의 기억은 없어요.'
             else:
-                return random.choice(NOT_IN_MEMORY_MESSAGE)
-        elif args[0] in memories:  # 키워드에 대한 기억 존재
-            mem = memories[args[0]]
-            if author.id in mem[::3]:  # 같은 유저의 기억 덮어쓰기
-                i = mem.index(author.id)
-                memories[args[0]][i] = author.id
-                memories[args[0]][i+1] = author.name
-                memories[args[0]][i+2] = ' '.join(args[1:])
-            else:  # 새로운 유저의 기억
-                memories[args[0]] += [author.id, author.name, ' '.join(args[1:])]
-        else:  # 새로운 키워드
-            memories[args[0]] = [author.id, author.name, ' '.join(args[1:])]
+                ret = random.choice(NOT_IN_MEMORY_MESSAGE)
+        else:
+            if keyword not in memories:  # 새로운 키워드
+                memories[keyword] = {}
+
+            memories[keyword][author.id] = {}
+            memories[keyword][author.id]['name'] = author.name
+            memories[keyword][author.id]['content'] = ' '.join(args[1:])
+            ret = random.choice(MEMORIZE_MESSAGE)
 
         write_json(MEMORY_FILE, memories)
-        return random.choice(MEMORIZE_MESSAGE) if args[0] != '삭제' else '기억에서 지웠어요.'
+
     elif len(args) == 1:
         if args[0] == '삭제':
-            return '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
+            ret = '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
         elif args[0] in memories or args[0] == '랜덤':
             if args[0] == '랜덤' and len(memories) > 0:
-                key = random.choice(list(memories.keys()))
+                keyword = random.choice(list(memories.keys()))
             elif args[0] in memories:
-                key = args[0]
+                keyword = args[0]
             else:
-                return '기억이 하나도 없어요.'
+                ret = '기억이 하나도 없어요.'
 
-            mem = memories[key]
-            contents = []
-            for i in range(len(mem)//3):
-                contents += [mem[3*i+2]+' _- '+mem[3*i+1]+'_']
-            embed = discord.Embed(title=key,
-                                  description='\n'.join(contents), color=THEME_COLOR)
-            embed.set_author(name=BOTNAME + ' DB', url=URL, icon_url=ICON_URL)
-            return embed
+            mem = memories[keyword]
+            desc = ''
+            for a in mem:
+                desc += mem[a]['content'] + ' _- ' + mem[a]['name'] + '_\n'
+            ret = make_embed(title=keyword, desc=desc)
+            ret.set_author(name=BOTNAME + ' DB', url=URL, icon_url=ICON_URL)
         else:
-            return random.choice(NOT_IN_MEMORY_MESSAGE)
-    else:
-        return '기억해둘 내용이나 기억해낼 내용을 입력해 주세요.'
+            ret = random.choice(NOT_IN_MEMORY_MESSAGE)
+
+    else:  # len(args) == 0:
+        ret = '기억해둘 내용이나 기억해낼 내용을 입력해 주세요.'
+
+    return ret
 
 
 # for GAMER
