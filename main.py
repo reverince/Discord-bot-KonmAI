@@ -68,13 +68,13 @@ async def 도움(*args):
             result.add_field(name='`잡퀘',
                              value='잡 퀘스트 NPC 위치를 알려 드려요. ` `잡퀘 전사`\n창천, 홍련 추가 직업은 아직 지원되지 않아요.')
             result.add_field(name='`장비(WIP)',
-                             value='상점에서 파는 채집·제작직 최적 장비를 알려 드려요. ` `장비 광부 43`\n판매 NPC는 ` `상점 `으로 검색하면 여러 곳이 있어요.')
+                             value='상점에서 파는 채집·제작직 최적 장비를 알려 드려요. ` `장비 광부 43`\n` `상점 `으로 검색하면 해당 아이템의 판매 NPC들을 볼 수 있어요.')
             result.add_field(name='`채집',
                              value='공식 가이드에서 채집 위치정보를 검색해요. ` `채집 황혼비취 `')
             result.add_field(name='`토벌',
                              value='인벤에서 토벌수첩 몬스터가 어디 있는지 찾아 드려요. ` `토벌 무당벌레 `')
-            result.add_field(name='`풍맥',
-                             value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` `풍맥 홍옥해 `\n풍맥 퀘스트는 아직이에요.')
+            result.add_field(name='`풍맥(WIP)',
+                             value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` `풍맥 홍옥해 `\n링크 방식으로 변경될 예정이에요.')
 
         else:
             result = '그런 도움말은 없어요.'
@@ -516,14 +516,15 @@ async def 상점(*args):
 @bot.command()
 async def 의뢰(*args):
     if len(args) > 0:
-        if len(args) == 1:
-            if args[0].isdigit():
-                level = int(args[0])
-                result = ffxiv.guild_quest(level)
-            else:
-                result = ENTER_DIGIT_MESSAGE
+        if args[-1].isdigit():
+            job = 'mercernary'
+            level = int(args[-1])
+            if len(args) == 2:
+                if args[0] in ffxiv.CRAFTERS + ffxiv.GATHERERS + ['채집', '제작']:
+                    job = 'gathering'
+            result = ffxiv.guild_quest(level, job)
         else:
-            result = ':confused:'
+            result = ENTER_DIGIT_MESSAGE
     else:
         result = enter_message('레벨')
 

@@ -17,6 +17,9 @@ TOOL_FILE = 'FFXIV/tool.json'
 WIND_FILE = 'FFXIV/wind.json'
 WIND_QUEST_FILE = 'FFXIV/wind_quest.json'
 
+CRAFTERS = ['가죽공예가', '갑주제작사', '대장장이', '목수', '보석공예사', '연금술사', '요리사', '재봉사']
+GATHERERS = ['광부', '어부', '원예가']
+
 NO_RESULT_MESSAGE = '결과를 찾지 못했어요.'
 
 
@@ -131,7 +134,7 @@ def seller(keyword):  # `상점
     return ret
 
 
-def guild_quest(level):  # `의뢰
+def guild_quest(level, job='mercernary'):  # `의뢰
 
     guild_quests = funcs.read_json(GUILD_QUEST_FILE)
 
@@ -139,9 +142,10 @@ def guild_quest(level):  # `의뢰
     for lvl in range(level, 0, -1):
         lvl = str(lvl)
         if lvl in guild_quests:
-            title = '**' + lvl + '**레벨 용병업 의뢰 수주 장소'
+            quest_type = '용병업' if job == 'mercernary' else '채집·제작업'
+            title = '**' + lvl + '**레벨 ' + quest_type + ' 의뢰 수주 장소'
             desc = ''
-            for loc in guild_quests[lvl]["mercernary"]:
+            for loc in guild_quests[lvl][job]:
                 desc += f':white_small_square: {loc}\n'
             ret = funcs.make_embed(title=title,
                                    desc=desc, by_me=True)
@@ -165,9 +169,6 @@ def job_quest(keyword):  # `잡퀘
 
 
 def tool(job, level):  # `장비
-
-    CRAFTERS = ['가죽공예가', '갑주제작사', '대장장이', '목수', '보석공예사', '연금술사', '요리사', '재봉사']
-    GATHERERS = ['광부', '어부', '원예가']
 
     tools = funcs.read_json(TOOL_FILE)
     gatherer_equipments = funcs.read_json(GATHERER_EQUIPMENT_FILE)
