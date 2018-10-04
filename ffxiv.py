@@ -55,7 +55,7 @@ def search_lodestone(keyword, option=None):
 # For Commands
 
 
-def guide(keyword):  # `공식
+def guide(keyword):  # 공식
 
     address = to_lodestone_href(keyword)
     desc = '[공식 가이드 **' + keyword + '** 검색 결과](' + address + ')'
@@ -64,7 +64,7 @@ def guide(keyword):  # `공식
     return ret
 
 
-def recipe(keyword):  # `레시피
+def recipe(keyword):  # 레시피
 
     tree = search_lodestone(keyword, 'recipe')
     if tree is not None:
@@ -92,7 +92,7 @@ def recipe(keyword):  # `레시피
     return ret
 
 
-def elite(keyword):  # `마물
+def elite(keyword):  # 마물
 
     elites = funcs.read_json(ELITE_FILE)
     if keyword in elites:
@@ -112,7 +112,7 @@ def elite(keyword):  # `마물
     return ret
 
 
-def seller(keyword):  # `상점
+def seller(keyword):  # 상점
 
     tree = search_lodestone(keyword)
     if tree is not None:
@@ -134,7 +134,7 @@ def seller(keyword):  # `상점
     return ret
 
 
-def guild_quest(level, job='mercernary'):  # `의뢰
+def guild_quest(level, job='mercernary'):  # 의뢰
 
     guild_quests = funcs.read_json(GUILD_QUEST_FILE)
 
@@ -154,7 +154,7 @@ def guild_quest(level, job='mercernary'):  # `의뢰
     return ret
 
 
-def job_quest(keyword):  # `잡퀘
+def job_quest(keyword):  # 잡퀘
 
     job_npcs = funcs.read_json(JOB_NPC_FILE)
 
@@ -168,7 +168,7 @@ def job_quest(keyword):  # `잡퀘
     return ret
 
 
-def tool(job, level):  # `장비
+def tool(job, level):  # 장비
 
     tools = funcs.read_json(TOOL_FILE)
     gatherer_equipments = funcs.read_json(GATHERER_EQUIPMENT_FILE)
@@ -234,7 +234,7 @@ def tool(job, level):  # `장비
     return ret
 
 
-def gathering(keyword):  # `채집
+def gathering(keyword):  # 채집
 
     # TODO
     for substr in ['샤드', '크리스탈', '클러스터']:
@@ -270,7 +270,7 @@ def gathering(keyword):  # `채집
     return ret
 
 
-def hunting(keyword):  # `토벌
+def hunting(keyword):  # 토벌
 
     huntings = funcs.read_json(HUNTING_FILE)
 
@@ -289,7 +289,7 @@ def hunting(keyword):  # `토벌
     return ret
 
 
-def wind(keyword):  # `풍맥
+def wind(keyword):  # 풍맥
 
     winds = funcs.read_json(WIND_FILE)
 

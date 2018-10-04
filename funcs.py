@@ -13,22 +13,23 @@ import time
 
 TOKEN = os.environ['TOKEN']
 
-BOTNAME = 'KonmAI v0.9'
-PREFIX = '`'
+BOTNAME = 'KonmAI v0.10'
+PREFIX = '~'
 DESCRIPTION = ''
-GAME = '도움말은 `도움'
+GAME = '도움말은 ' + PREFIX + '도움'
 THEME_COLOR = 0x00a0ee
 URL = 'https://discord.gg/E6eXnpJ'
 ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
 GF_TIME_FILE = 'gf_time.json'
 
-CUSTOM_CHO_QUIZ_FILE = 'json/custom_cho_quiz.json'
 GAMER_FILE = 'json/gamer.json'
 MEMORY_FILE = 'json/memory.json'
 
 ENTER_DIGIT_MESSAGE = '알맞은 값을 입력해 주세요.'
 ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요.'
+NO_SUCH_COMMAND_MESSAGE = '그런 명령어는 없어요.'
+WHAT_TO_DO_MESSAGE = '어떤 일을 할까요?'
 
 bot = Bot(description=DESCRIPTION, command_prefix=PREFIX)
 
@@ -41,7 +42,7 @@ lots_games = {}  # 제비뽑기
 # Commonly used
 
 
-def enter_message(what):
+def enter_message(what='키워드'):
     return '검색할 ' + what + josa(what, '를') + ' 입력해 주세요.'
 
 
@@ -99,9 +100,9 @@ def find_id_by_name(name):
 
 
 def find_name_by_id(id):
-    member = [s.get_member(id) for s in bot.servers][0]
-    if member is not None:
-        return member.name
+    member = [s.get_member(id) for s in bot.servers]
+    if len(member) > 0 and member[0] is not None:
+        return member[0].name
     else:
         return None
 
@@ -155,16 +156,17 @@ def cho_gen_lite(length):
 
 def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2, 3))):
     """genre : movie, music, animal, dic, game, people, book"""
+    base = 'http://www.jaum.kr/index.php?w='
     query = ''
     for i in range(len(chos)):
         query += '%A4' + PARSED_CHO_LIST[CHO_LIST.index(chos[i])]
     if genre is None:
-            page = requests.get('http://www.jaum.kr/index.php?w='+query)
+            page = requests.get(base + query)
     else:
-        page = requests.get('http://www.jaum.kr/index.php?w='+query+'&k='+genre)
+        page = requests.get(base + query + '&k=' + genre)
     tree = html.fromstring(page.content)
 
-    result = tree.xpath('//*[@id="container"]/div/table/tbody/tr[1]/td[1]//text()')
+    result = tree.xpath('//*[@id="container"]//td[1]//text()')
 
     return result
 
@@ -252,30 +254,6 @@ class ChoQuiz:
 
         return ret
 
-    @staticmethod
-    def add_custom(author, args):
-        """args: ['정답', '설', '명', ...], quizs: {'정답': ['id', 'name', '설명']}"""
-        print(author)
-        print(args)
-        if len(args) > 1:
-            quizs = read_json(CUSTOM_CHO_QUIZ_FILE)
-
-            if args[0] in quizs:  # 이미 등록된 정답
-                mem = quizs[args[0]]
-                if author.id == mem[0]:  # 수정
-                    quizs[args[0]][2] = ' '.join(args[1:])
-                    ret = '설명을 수정했어요.'
-                else:
-                    return '다른 유저님이 이미 등록한 정답이에요. :confused:'
-            else:
-                quizs[args[0]] = [author.id, author.name, ' '.join(args[1:])]
-                ret = '새로운 초성퀴즈를 등록했어요.'
-
-            write_json(CUSTOM_CHO_QUIZ_FILE, quizs)
-            return ret
-        else:
-            return '` `초성 등록 정답 설명 `처럼 입력해 주세요.'
-
     def correct(self, channel):
         self.count -= 1
         if self.count > 0:
@@ -352,7 +330,7 @@ def gf_time(pd_time):
     return ret
 
 
-def roll_dice(cnt, side, mention=None):  # `주사위
+def roll_dice(cnt, side, mention=None):  # 주사위
     try:
         dice = []
         for _ in range(cnt):
@@ -364,12 +342,12 @@ def roll_dice(cnt, side, mention=None):  # `주사위
         ret += ' (' + str(sum(dice)) + ')'
     except ValueError:
         ret = f'{mention}님, ' if mention is not None else ''
-        ret += '` `주사위 2d6 `처럼 입력해 주세요. `2`는 주사위 개수, `6`은 주사위 면수예요.'
+        ret += '` ~주사위 2d6 `처럼 입력해 주세요. `2`는 주사위 개수, `6`은 주사위 면수예요.'
 
     return ret
 
 
-def memory(author, *args):  # `기억
+def memory(author, *args):  # 기억
     """args: ['키워드', '내', '용', ...],
     memories: {'키워드': {'name': '', 'content': ''}, ...}"""
 
@@ -406,7 +384,7 @@ def memory(author, *args):  # `기억
 
     elif len(args) == 1:
         if args[0] == '삭제':
-            ret = '어떤 키워드에 대한 기억을 삭제할까요? ` `기억 삭제 원주율 `처럼 입력해 주세요.'
+            ret = '어떤 키워드에 대한 기억을 삭제할까요? ` ~기억 삭제 원주율 `처럼 입력해 주세요.'
         elif args[0] in memories or args[0] == '랜덤':
             if args[0] == '랜덤' and len(memories) > 0:
                 keyword = random.choice(list(memories.keys()))
