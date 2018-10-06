@@ -263,7 +263,7 @@ async def 제비(ctx, *args):
     channel = ctx.message.channel
 
     if len(args) > 0:
-        if args[0].isdigit() and args[0] > 0:
+        if args[0].isdigit() and int(args[0]) > 0:
             if channel not in lots_games.keys():
                 lots_cnt = int(args[0])
                 lots_games[channel] = [True] + [False] * (lots_cnt - 1)
@@ -303,7 +303,7 @@ async def 리볼버(ctx, *args):
     result = None
     channel = ctx.message.channel
     if len(args) > 0:
-        if args[0].isdigit() and args[0] > 0:
+        if args[0].isdigit() and int(args[0]) > 0:
             if channel not in revolvers.keys():
                 bullet_cnt = int(args[0])
                 revolvers[channel] = [True] * bullet_cnt + \
@@ -340,7 +340,7 @@ async def 리볼버(ctx, *args):
 
 @bot.command(pass_context=True)
 async def 알람(ctx, *args):
-    """일정 시간 후 멘션"""
+    """특정 시각 혹은 일정 시간 후 멘션"""
     if len(args) > 0:
         channel = ctx.message.channel
         author = ctx.message.author
