@@ -21,9 +21,10 @@ THEME_COLOR = 0x00a0ee
 URL = 'https://discord.gg/E6eXnpJ'
 ICON_URL = 'https://ko.gravatar.com/userimage/54425936/ab5195334dd95d4171ac9ddab1521a5b.jpeg'
 
-GF_TIME_FILE = 'gf_time.json'
+DATETIME_DELTA = datetime.timedelta(hours=9)
 
 GAMER_FILE = 'json/gamer.json'
+GF_TIME_FILE = 'gf_time.json'
 MEMORY_FILE = 'json/memory.json'
 
 ENTER_DIGIT_MESSAGE = '알맞은 값을 입력해 주세요.'
@@ -37,6 +38,7 @@ bj_games = {}  # 블랙잭
 bj_msgs = {}  # 블랙잭 메시지
 cho_quizs = {}  # 초성퀴즈
 lots_games = {}  # 제비뽑기
+revolvers = {}  # 리볼버
 
 
 # Commonly used
@@ -44,6 +46,10 @@ lots_games = {}  # 제비뽑기
 
 def enter_message(what='키워드'):
     return '검색할 ' + what + josa(what, '를') + ' 입력해 주세요.'
+
+
+def now():
+    return datetime.datetime.now() + DATETIME_DELTA
 
 
 def to_url(keyword):
@@ -110,12 +116,13 @@ def find_name_by_id(id):
 # for Commands
 
 
-def bignumrize(numstr):
+def bignumrize(num):
     """Discord 이모지로 숫자 강조. Credit for Discord bot Ayana."""
     NUM_EMOJIS = [':zero:', ':one:', ':two:', ':three:', ':four:',
                   ':five:', ':six:', ':seven:', ':eight:', ':nine:']
+    num = str(num)
     ret = ''
-    for c in numstr:
+    for c in num:
         ret += NUM_EMOJIS[int(c)] if c.isdigit() else c
 
     return ret
@@ -156,14 +163,14 @@ def cho_gen_lite(length):
 
 def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2, 3))):
     """genre : movie, music, animal, dic, game, people, book"""
-    base = 'http://www.jaum.kr/index.php?w='
+    BASE = 'http://www.jaum.kr/index.php?w='
     query = ''
     for i in range(len(chos)):
         query += '%A4' + PARSED_CHO_LIST[CHO_LIST.index(chos[i])]
     if genre is None:
-            page = requests.get(base + query)
+            page = requests.get(BASE + query)
     else:
-        page = requests.get(base + query + '&k=' + genre)
+        page = requests.get(BASE + query + '&k=' + genre)
     tree = html.fromstring(page.content)
 
     result = tree.xpath('//*[@id="container"]//td[1]//text()')
@@ -265,14 +272,16 @@ class ChoQuiz:
 
 def pubg_profile(name, server='krjp'):
     # server: krjp, jp, as, na, eu, oc, sa, sea, ru
+    BASE = 'https://dak.gg/profile/'
     if server is None:
-        response = requests.get('https://dak.gg/profile/'+name)
+        url = BASE + name
     else:
-        year = str(time.gmtime().tm_year)
-        month = str(time.gmtime().tm_mon)
+        year = str(now().year)
+        month = str(now().month)
         if len(month) < 2:
             month = '0' + month
-        response = requests.get(f'https://dak.gg/profile/{name}/{year}-{month}/{server}')
+        url = BASE + f'{name}/{year}-{month}/{server}'
+    response = requests.get(url)
 
     tree = html.fromstring(response.content)
     data = tree.xpath('//section[@class="solo modeItem"]//text()')
@@ -280,40 +289,76 @@ def pubg_profile(name, server='krjp'):
     data = list(filter(lambda x: x != '', data))
 
     if len(data) >= 44:
-        ret = {}
-        ret['avatar'] = tree.xpath('//div[@class="userInfo"]/img/@src')[0]
-        ret['solo-playtime'] = data[1]
-        ret['solo-record'] = data[2]
-        ret['solo-grade'] = data[3]
-        ret['solo-score'] = data[4]
-        ret['solo-rank'] = data[6]
+        ratings = {}
+        ratings['avatar'] = tree.xpath('//div[@class="userInfo"]/img/@src')[0]
+        ratings['solo-playtime'] = data[1]
+        ratings['solo-record'] = data[2]
+        ratings['solo-grade'] = data[3]
+        ratings['solo-score'] = data[4]
+        ratings['solo-rank'] = data[6]
         if len(data) == 45:
-            ret['solo-top'] = data[7]
+            ratings['solo-top'] = data[7]
         i = 7 if len(data) == 44 else 8
-        ret['solo-win-rating'] = data[i]
-        ret['solo-win-top'] = data[i+2]
-        ret['solo-kill-rating'] = data[i+3]
-        ret['solo-kill-top'] = data[i+5]
-        ret['solo-kd'] = data[i+8]
-        ret['solo-kd-top'] = data[i+9]
-        ret['solo-winratio'] = data[i+11]
-        ret['solo-winratio-top'] = data[i+12]
-        ret['solo-top10'] = data[i+14]
-        ret['solo-top10-top'] = data[i+15]
-        ret['solo-avgdmg'] = data[i+17]
-        ret['solo-avgdmg-top'] = data[i+18]
-        ret['solo-games'] = data[i+20]
-        ret['solo-games-top'] = data[i+21]
-        ret['solo-mostkills'] = data[i+23]
-        ret['solo-mostkills-top'] = data[i+24]
-        ret['solo-headshots'] = data[i+26]
-        ret['solo-headshots-top'] = data[i+27]
-        ret['solo-longest'] = data[i+29]
-        ret['solo-longest-top'] = data[i+30]
-        ret['solo-survived'] = data[i+32]
-        ret['solo-survived-top'] = data[i+33]
+        ratings['solo-win-rating'] = data[i]
+        ratings['solo-win-top'] = data[i+2]
+        ratings['solo-kill-rating'] = data[i+3]
+        ratings['solo-kill-top'] = data[i+5]
+        ratings['solo-kd'] = data[i+8]
+        ratings['solo-kd-top'] = data[i+9]
+        ratings['solo-winratio'] = data[i+11]
+        ratings['solo-winratio-top'] = data[i+12]
+        ratings['solo-top10'] = data[i+14]
+        ratings['solo-top10-top'] = data[i+15]
+        ratings['solo-avgdmg'] = data[i+17]
+        ratings['solo-avgdmg-top'] = data[i+18]
+        ratings['solo-games'] = data[i+20]
+        ratings['solo-games-top'] = data[i+21]
+        ratings['solo-mostkills'] = data[i+23]
+        ratings['solo-mostkills-top'] = data[i+24]
+        ratings['solo-headshots'] = data[i+26]
+        ratings['solo-headshots-top'] = data[i+27]
+        ratings['solo-longest'] = data[i+29]
+        ratings['solo-longest-top'] = data[i+30]
+        ratings['solo-survived'] = data[i+32]
+        ratings['solo-survived-top'] = data[i+33]
+ 
+        desc = '시즌: ' + year + '-' + month
+        ret = make_embed(title=name, desc=desc)
+        ret.set_author(name='PUBG 솔로 전적 by dak.gg',
+                          url=url, icon_url=ICON_URL)
+        ret.set_thumbnail(url=ratings['avatar'])
+        ret.add_field(name='플레이타임',
+                      value=re.sub('hours', '시간', re.sub('mins', '분', ratings['solo-playtime'])), inline=True)
+        ret.add_field(name='기록',
+                      value=re.sub('W', '승 ', re.sub('T', '탑 ', re.sub('L', '패', ratings['solo-record']))), inline=True)
+        ret.add_field(name='등급',
+                      value=ratings['solo-grade'], inline=True)
+        ret.add_field(name='점수',
+                      value=f'{ratings["solo-score"]} ({ratings["solo-rank"]})', inline=True)
+        ret.add_field(name='승점',
+                      value=f'{ratings["solo-win-rating"]} ({ratings["solo-win-top"]})', inline=True)
+        ret.add_field(name='승률',
+                      value=f'{ratings["solo-winratio"]} ({ratings["solo-winratio-top"]})', inline=True)
+        ret.add_field(name='TOP10',
+                      value=f'{ratings["solo-top10"]} ({ratings["solo-top10-top"]})', inline=True)
+        ret.add_field(name='여포',
+                      value=f'{ratings["solo-kill-rating"]} ({ratings["solo-kill-top"]})', inline=True)
+        ret.add_field(name='K/D',
+                      value=f'{ratings["solo-kd"]} ({ratings["solo-kd-top"]})', inline=True)
+        ret.add_field(name='평균 데미지',
+                      value=f'{ratings["solo-avgdmg"]} ({ratings["solo-avgdmg-top"]})', inline=True)
+        ret.add_field(name='최대 킬',
+                      value=f'{ratings["solo-mostkills"]} ({ratings["solo-mostkills-top"]})', inline=True)
+        ret.add_field(name='헤드샷',
+                      value=f'{ratings["solo-headshots"]} ({ratings["solo-headshots-top"]})', inline=True)
+        ret.add_field(name='저격',
+                      value=f'{ratings["solo-longest"]} ({ratings["solo-longest-top"]})', inline=True)
+        ret.add_field(name='게임 수',
+                      value=f'{ratings["solo-games"]} ({ratings["solo-games-top"]})', inline=True)
+        ret.add_field(name='생존',
+                      value=f'{ratings["solo-survived"]} ({ratings["solo-survived-top"]})', inline=True)
     else:
-        ret = None
+        ret = '아이디 검색에 실패했어요.'
 
     return ret
 
@@ -345,6 +390,33 @@ def roll_dice(cnt, side, mention=None):  # 주사위
         ret += '` ~주사위 2d6 `처럼 입력해 주세요. `2`는 주사위 개수, `6`은 주사위 면수예요.'
 
     return ret
+
+
+async def alarm_after(sleep_sec, channel, author, message=None):  # 알람
+    await bot.send_message(channel, str(sleep_sec) + '초 알람이 설정되었어요.')
+    await asyncio.sleep(sleep_sec)
+    alarm = author.mention + '님, ' + str(sleep_sec) + '초 알람 시간이 되었어요.'
+    if message is not None:
+        alarm += ' **' + message + '**'
+
+    await bot.send_message(channel, alarm)
+
+
+async def alarm_at(hour, minute, channel, author, message=None):  # 알람
+    now = datetime.datetime.now() + DATETIME_DELTA
+    second_now = now.hour * 3600 + now.minute * 60 + now.second
+    second_at = hour * 3600 + minute * 60
+    second_to = second_at - second_now
+    if second_to < 0:
+        second_to += 86400
+    time_str = str(hour) + '시 ' + str(minute) + '분'
+    await bot.send_message(channel, time_str + ' 알람이 설정되었어요.')
+    await asyncio.sleep(second_to)
+    alarm = author.mention + '님, ' + time_str + '이에요.'
+    if message is not None:
+        alarm += ' **' + message + '**'
+
+    await bot.send_message(channel, alarm)
 
 
 def memory(author, *args):  # 기억
@@ -601,7 +673,7 @@ class Blackjack:
             ', '.join(PlayingCard.str(self.dcards[0:-1])),
             str(PlayingCard.bj_sum(self.dcards[0:-1])), self.player.name, ', '.join(PlayingCard.str(self.pcards)), str(PlayingCard.bj_sum(self.pcards)))
 
-    def result(self):
+    def ret(self):
         return 'KonmAI의 패: {} ({})\n{}님의 패: {} ({})'.format(
             ', '.join(PlayingCard.str(self.dcards)),
             str(PlayingCard.bj_sum(self.dcards)), self.player.name, ', '.join(PlayingCard.str(self.pcards)), str(PlayingCard.bj_sum(self.pcards)))

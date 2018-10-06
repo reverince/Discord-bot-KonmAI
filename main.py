@@ -100,8 +100,10 @@ async def 도움(*args):
                          value='주사위를 던져요.\n` ~주사위 2d6 `처럼 사용하세요.', inline=True)
         result.add_field(name=PREFIX+'제비',
                          value='당첨이 한 개 들어 있는 제비를 준비해요.\n` ~제비 3 `처럼 시작하고 ` ~제비 `로 뽑으세요.\n취소하려면 ` ~제비 끝 `을 입력하세요.', inline=True)
-        #result.add_field(name=PREFIX+'알람',
-        #                 value='특정 시각 혹은 일정 시간 후에 메시지와 함께 멘션해 드려요. ` ~알람 23:59 자라 ` ` ~알람 240 컵라면 `')
+        #result.add_field(name=PREFIX+'리볼버',
+        #                 value='러시안 룰렛을 할 수 있어요.\n` ~리볼버 1 `처럼 장전하고 ` ~리볼버 `로 발사하세요.', inline=True)
+        result.add_field(name=PREFIX+'알람',
+                         value='특정 시각 혹은 일정 시간 후에 메시지와 함께 멘션해 드려요. ` ~알람 23:59 자라 ` ` ~알람 240 컵라면 `')
         result.add_field(name=PREFIX+'기억',
                          value='키워드에 관한 내용을 DB에 기억해요.\n` ~기억 원주율 3.14159265 `로 기억에 남기고 ` ~기억 원주율 `로 불러오세요.\n` ~기억 랜덤 `을 입력하면 아무 기억이나 불러와요.\n` ~기억 삭제 원주율`로 기억을 지울 수 있어요.', inline=True)
         '''
@@ -191,7 +193,8 @@ async def 초성(ctx, *args):
         result = ChoQuiz.end(channel)
     elif len(args) == 1 and args[0] == '패스':
         if cho_quiz is not None:
-            result = '정답은 [**' + cho_quiz.answer + '**]였어요. :hugging:\n' + cho_quiz.correct(channel)
+            result = '정답은 [**' + cho_quiz.answer + '**]였어요. :hugging:'
+            result += '\n' + cho_quiz.correct(channel)
         else:
             result = '진행중인 초성퀴즈가 없어요.'
     else:
@@ -211,60 +214,21 @@ async def 초성(ctx, *args):
     await bot.say(result)
 
 
+'''
 @bot.command()
 async def 배그(*args):
     """dak.gg PUBG 프로필 검색"""
     if len(args) > 0:
         name = args[0]
-        ratings = pubg_profile(name)
-        year = str(time.gmtime().tm_year)
-        month = str(time.gmtime().tm_mon)
-        if len(month) < 2:
-            month = '0' + month
-
-        if ratings is not None:
-            desc = '시즌: ' + year + '-' + month
-            url = 'https://dak.gg/profile/' + name + '/' + year + '-' + month + '/krjp'
-            result = make_embed(title=name, desc=desc)
-            result.set_author(name='PUBG 솔로 전적 by dak.gg',
-                              url=url, icon_url=ICON_URL)
-            result.set_thumbnail(url=ratings['avatar'])
-            result.add_field(name='플레이타임',
-                             value=re.sub('hours', '시간', re.sub('mins', '분', ratings['solo-playtime'])), inline=True)
-            result.add_field(name='기록',
-                             value=re.sub('W', '승 ', re.sub('T', '탑 ', re.sub('L', '패', ratings['solo-record']))), inline=True)
-            result.add_field(name='등급',
-                             value=ratings['solo-grade'], inline=True)
-            result.add_field(name='점수',
-                             value=f'{ratings["solo-score"]} ({ratings["solo-rank"]})', inline=True)
-            result.add_field(name='승점',
-                             value=f'{ratings["solo-win-rating"]} ({ratings["solo-win-top"]})', inline=True)
-            result.add_field(name='승률',
-                             value=f'{ratings["solo-winratio"]} ({ratings["solo-winratio-top"]})', inline=True)
-            result.add_field(name='TOP10',
-                             value=f'{ratings["solo-top10"]} ({ratings["solo-top10-top"]})', inline=True)
-            result.add_field(name='여포',
-                             value=f'{ratings["solo-kill-rating"]} ({ratings["solo-kill-top"]})', inline=True)
-            result.add_field(name='K/D',
-                             value=f'{ratings["solo-kd"]} ({ratings["solo-kd-top"]})', inline=True)
-            result.add_field(name='평균 데미지',
-                             value=f'{ratings["solo-avgdmg"]} ({ratings["solo-avgdmg-top"]})', inline=True)
-            result.add_field(name='최대 킬',
-                             value=f'{ratings["solo-mostkills"]} ({ratings["solo-mostkills-top"]})', inline=True)
-            result.add_field(name='헤드샷',
-                             value=f'{ratings["solo-headshots"]} ({ratings["solo-headshots-top"]})', inline=True)
-            result.add_field(name='저격',
-                             value=f'{ratings["solo-longest"]} ({ratings["solo-longest-top"]})', inline=True)
-            result.add_field(name='게임 수',
-                             value=f'{ratings["solo-games"]} ({ratings["solo-games-top"]})', inline=True)
-            result.add_field(name='생존',
-                             value=f'{ratings["solo-survived"]} ({ratings["solo-survived-top"]})', inline=True)
-
-            await bot.say(embed=result)
-        else:
-            await bot.say('아이디 검색에 실패했어요.')
+        result = pubg_profile(name)
     else:
-        await bot.say(enter_message('아이디'))
+        result = enter_message('아이디')
+
+    if type(result) is str:
+        await bot.say(result)
+    else:  # embed
+        await bot.say(embed=result)
+'''
 
 
 @bot.command()
@@ -299,9 +263,10 @@ async def 제비(ctx, *args):
     channel = ctx.message.channel
 
     if len(args) > 0:
-        if args[0].isdigit():
+        if args[0].isdigit() and args[0] > 0:
             if channel not in lots_games.keys():
-                lots_games[channel] = [True] + [False] * (int(args[0]) - 1)
+                lots_cnt = int(args[0])
+                lots_games[channel] = [True] + [False] * (lots_cnt - 1)
                 random.shuffle(lots_games[channel])
                 result = '제비뽑기가 준비됐어요.'
             else:
@@ -313,7 +278,7 @@ async def 제비(ctx, *args):
             else:
                 result = '준비된 제비가 없어요.'
         else:
-            result = '숫자를 입력해 주세요.'
+            result = ENTER_DIGIT_MESSAGE
     else:
         if channel not in lots_games.keys():
             result = '제비 개수를 입력해 주세요.'
@@ -327,6 +292,78 @@ async def 제비(ctx, *args):
                 result += '꽝. :smirk:'
 
     await bot.say(result)
+
+
+@bot.command(pass_context=True)
+async def 리볼버(ctx, *args):
+    """Credit for Floppy Disk Bot(💾❗)"""
+    BEFORE_FACES = [':confounded:', ':grimacing:', ':persevere:', ':tired_face:']
+    AFTER_FACES = [':disappointed:', ':relieved:', ':smirk:', ':sweat_smile:', ':wink:']
+
+    result = None
+    channel = ctx.message.channel
+    if len(args) > 0:
+        if args[0].isdigit() and args[0] > 0:
+            if channel not in revolvers.keys():
+                bullet_cnt = int(args[0])
+                revolvers[channel] = [True] * bullet_cnt + \
+                                     [False] * (6 - bullet_cnt)
+                random.shuffle(revolvers[channel])
+                result = '리볼버를 장전했어요. :gun::gear:'
+            else:
+                result = '이미 장전된 리볼버가 있어요. :gun:' + bignumrize(len(revolvers[channel]))
+        elif args[0] == '끝':
+            if channel in revolvers.keys():
+                del revolvers[channel]
+                result = '리볼버 장전을 해제했어요.'
+            else:
+                result = '장전된 리볼버가 없어요.'
+        else:
+            result = ENTER_DIGIT_MESSAGE
+    else:
+        if channel not in revolvers.keys():
+            result = '먼저 리볼버를 장전해 주세요.'
+        else:
+            shot = revolvers[channel].pop()
+            mention = ctx.message.author.mention
+            shot_msg = await bot.say(mention + ' → ' + random.choice(BEFORE_FACES) + ':gun:')
+            await asyncio.sleep(1)
+            if shot:
+                del revolvers[channel]
+                await bot.edit_message(shot_msg, mention + ' → :skull::gun::boom:')
+            else:
+                await bot.edit_message(shot_msg, mention + ' → ' + random.choice(AFTER_FACES) + ':gun::speech_balloon:')
+
+    if result is not None:
+        await bot.say(result)
+
+
+@bot.command(pass_context=True)
+async def 알람(ctx, *args):
+    """일정 시간 후 멘션"""
+    if len(args) > 0:
+        channel = ctx.message.channel
+        author = ctx.message.author
+        msg = None
+        if len(args) > 1:
+            msg = ' '.join(args[1:])
+        if args[0].isdigit():
+            time_sec = int(args[0])
+            await alarm_after(time_sec, channel, author, msg)
+        elif ':' in args[0]:
+            search = re.search('(.+):(.+)', args[0])
+            try:
+                hour = int(search.group(1))
+                minute = int(search.group(2))
+                if hour < 0 or minute < 0 or hour >= 24 or minute >= 60:
+                    raise ValueError
+                await alarm_at(hour, minute, channel, author, msg)
+            except (ValueError, AttributeError):
+                await bot.say(ENTER_DIGIT_MESSAGE)
+        else:
+            await bot.say(ENTER_DIGIT_MESSAGE)
+    else:
+        await bot.say('시간을 입력해 주세요.')
 
 
 @bot.command(pass_context=True)
