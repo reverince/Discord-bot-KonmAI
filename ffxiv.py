@@ -14,8 +14,6 @@ GUILD_QUEST_FILE = 'FFXIV/guild_quest.json'
 HUNTING_FILE = 'FFXIV/hunting.json'
 JOB_NPC_FILE = 'FFXIV/job_npc.json'
 TOOL_FILE = 'FFXIV/tool.json'
-WIND_FILE = 'FFXIV/wind.json'
-WIND_QUEST_FILE = 'FFXIV/wind_quest.json'
 
 CRAFTERS = ['가죽공예가', '갑주제작사', '대장장이', '목수', '보석공예사', '연금술사', '요리사', '재봉사']
 GATHERERS = ['광부', '어부', '원예가']
@@ -291,17 +289,17 @@ def hunting(keyword):  # 토벌
 
 def wind(keyword):  # 풍맥
 
-    winds = funcs.read_json(WIND_FILE)
+    REGIONS_HEAVENSWARD = ['커르다스 서부고지', '고지 드라바니아', '드라바니아 구름바다', '아발라시아 구름바다', '저지 드라바니아', '아지스 라']
+    REGIONS_STORMBLOOD = ['기라바니아 변방지대', '기라바니아 산악지대', '홍옥해', '얀샤', '아짐 대초원', '기라바니아 호반지대']
 
-    if keyword in winds:
-        title = '**' + keyword + '** 풍맥의 샘'
-        desc = ''
-        for wind in winds[keyword]:
-            desc += f':white_small_square: `{wind[0]}`,\t`{wind[1]}`\n'
-        footer = '자료: 파이널판타지 14 공식 가이드'
-        ret = funcs.make_embed(title=title,
-                               desc=desc, by_me=True, footer=footer)
+    address = 'http://guide.ff14.co.kr/map/'
+    if keyword in REGIONS_HEAVENSWARD:
+        address += 'heavensward/' + str(REGIONS_HEAVENSWARD.index(keyword) + 1)
+    elif keyword in REGIONS_STORMBLOOD:
+        address += 'stormblood/' + str(REGIONS_STORMBLOOD.index(keyword) + 1)
     else:
-        ret = NO_RESULT_MESSAGE
+        return NO_RESULT_MESSAGE
+    desc = '[공식 가이드 **' + keyword + '** 풍맥의 샘 지도](' + address + ')'
+    ret = funcs.make_embed(desc=desc, by_me=True)
 
     return ret

@@ -9,7 +9,6 @@ import os
 import requests
 import random
 import re
-import time
 
 TOKEN = os.environ['TOKEN']
 
@@ -179,20 +178,10 @@ def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2, 3))):
 
 
 def jaum_quiz(genre=None):
-    if genre == '영화':
-        genre = 'movie'
-    elif genre == '음악':
-        genre = 'music'
-    elif genre == '동식물':
-        genre = 'animal'
-    elif genre == '사전':
-        genre = 'dic'
-    elif genre == '게임':
-        genre = 'game'
-    elif genre == '인물':
-        genre = 'people'
-    elif genre == '책':
-        genre = 'book'
+    GENRES_KOR = ['영화', '음악', '동식물', '사전', '게임', '인물', '책']
+    GENRES_ENG = ['movie', 'music', 'animal', 'dic', 'game', 'people', 'book']
+    if genre in GENRES_KOR:
+        genre = GENRES_ENG[GENRES_KOR.index(genre)]
     else:
         return None
 
@@ -377,14 +366,15 @@ def gf_time(pd_time):
 
 def roll_dice(cnt, side, mention=None):  # 주사위
     try:
+        if cnt <= 0 or side <= 0:
+            raise ValueError
         dice = []
         for _ in range(cnt):
             dice.append(random.randint(1, side))
 
         ret = f'{mention}님의 ' if mention is not None else ''
         ret += f'{str(cnt)}d{str(side)} 주사위 결과 : '
-        ret += ', '.join([str(x) for x in dice])
-        ret += ' (' + str(sum(dice)) + ')'
+        ret += ', '.join([str(x) for x in dice]) + ' (' + str(sum(dice)) + ')'
     except ValueError:
         ret = f'{mention}님, ' if mention is not None else ''
         ret += '` ~주사위 2d6 `처럼 입력해 주세요. `2`는 주사위 개수, `6`은 주사위 면수예요.'

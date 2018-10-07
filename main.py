@@ -6,7 +6,6 @@ import datetime
 import json
 import random
 import re
-import time
 
 from funcs import *
 import ffxiv
@@ -73,8 +72,8 @@ async def 도움(*args):
                              value='공식 가이드에서 채집 위치정보를 검색해요. ` ~채집 황혼비취 `')
             result.add_field(name=PREFIX+'토벌',
                              value='인벤에서 토벌수첩 몬스터가 어디 있는지 찾아 드려요. ` ~토벌 무당벌레 `')
-            result.add_field(name=PREFIX+'풍맥(WIP)',
-                             value='공식 가이드에서 풍맥의 샘 위치를 검색해요. ` ~풍맥 홍옥해 `\n링크 방식으로 변경될 예정이에요.')
+            result.add_field(name=PREFIX+'풍맥',
+                             value='공식 가이드에서 풍맥의 샘 지도 링크를 만들어요. ` ~풍맥 홍옥해 `')
 
         else:
             result = '그런 도움말은 없어요.'
@@ -92,8 +91,8 @@ async def 도움(*args):
                          value='배그할까 레식할까? ` ~골라 배그 레식 `', inline=True)
         result.add_field(name=PREFIX+'초성',
                          value='초성퀴즈를 할 수 있어요. (장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책)\n` ~초성 게임 5 `처럼 사용하세요. 끝내려면 ` ~초성 끝 `을 입력하세요.\n(유저 등록 개발중)', inline=True)
-        result.add_field(name=PREFIX+'배그',
-                         value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
+        #result.add_field(name=PREFIX+'배그',
+        #                 value='[dak.gg](https://dak.gg)에서 배틀그라운드 전적을 찾아요.', inline=True)
         result.add_field(name=PREFIX+'소전',
                          value='제조 시간을 입력하시면 등장하는 전술인형 종류를 알려 드려요.\n` ~소전 03:40 `처럼 사용하세요.', inline=True)
         result.add_field(name=PREFIX+'주사위',
@@ -204,12 +203,12 @@ async def 초성(ctx, *args):
             genre = args[0] if len(args) > 0 else None
             count = int(args[1]) if len(args) > 1 else 10
 
-            if genre not in ['영화', '음악', '동식물', '사전', '게임', '인물', '책']:
-                result = '장르 : 영화, 음악, 동식물, 사전, 게임, 인물, 책'
-            else:  # OK
-                answer = jaum_quiz(genre)  # 정답 생성
+            answer = jaum_quiz(genre)  # 정답 생성
+            if answer is not None:
                 cho_quiz = ChoQuiz.start(channel, genre, count, answer)
                 result = cho(answer)  # 초성 공개
+            else:
+                result = '장르는 `영화`, `음악`, `동식물`, `사전`, `게임`, `인물`, `책`이 있어요.'
 
     await bot.say(result)
 
@@ -330,9 +329,10 @@ async def 리볼버(ctx, *args):
             await asyncio.sleep(1)
             if shot:
                 del revolvers[channel]
-                await bot.edit_message(shot_msg, mention + ' → :skull::gun::boom:')
+                message = mention + ' → :skull::gun::boom:'
             else:
-                await bot.edit_message(shot_msg, mention + ' → ' + random.choice(AFTER_FACES) + ':gun::speech_balloon:')
+                message = mention + ' → ' + random.choice(AFTER_FACES) + ':gun::speech_balloon:'
+            await bot.edit_message(shot_msg, message)
 
     if result is not None:
         await bot.say(result)
