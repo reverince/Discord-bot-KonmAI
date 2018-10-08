@@ -99,8 +99,8 @@ async def 도움(*args):
                          value='주사위를 던져요.\n` ~주사위 2d6 `처럼 사용하세요.', inline=True)
         result.add_field(name=PREFIX+'제비',
                          value='당첨이 한 개 들어 있는 제비를 준비해요.\n` ~제비 3 `처럼 시작하고 ` ~제비 `로 뽑으세요.\n취소하려면 ` ~제비 끝 `을 입력하세요.', inline=True)
-        #result.add_field(name=PREFIX+'리볼버',
-        #                 value='러시안 룰렛을 할 수 있어요.\n` ~리볼버 1 `처럼 장전하고 ` ~리볼버 `로 발사하세요.', inline=True)
+        result.add_field(name=PREFIX+'리볼버',
+                         value='러시안 룰렛을 할 수 있어요.\n` ~리볼버 1 `처럼 장전하고 ` ~리볼버 `로 발사하세요.', inline=True)
         result.add_field(name=PREFIX+'알람',
                          value='특정 시각 혹은 일정 시간 후에 메시지와 함께 멘션해 드려요. ` ~알람 23:59 자라 ` ` ~알람 240 컵라면 `')
         result.add_field(name=PREFIX+'기억',
@@ -119,10 +119,7 @@ async def 도움(*args):
         result.add_field(name=PREFIX+'도움 파판',
                          value='FFXIV 관련 명령어를 알려드려요.')
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command(pass_context=True)
@@ -371,10 +368,7 @@ async def 기억(ctx, *args):
     """MEMORY_FILE에 입력값 기억."""
     result = memory(ctx.message.author, *args)
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 # Commands for GAMER
@@ -501,10 +495,7 @@ async def 공식(*args):
     else:
         result = ENTER_KEYWORD_MESSAGE
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -515,10 +506,7 @@ async def 레시피(*args):
     else:
         result = ENTER_KEYWORD_MESSAGE
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -529,10 +517,7 @@ async def 마물(*args):
     else:
         result = ENTER_KEYWORD_MESSAGE
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -543,10 +528,7 @@ async def 상점(*args):
     else:
         result = ENTER_KEYWORD_MESSAGE
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -564,10 +546,7 @@ async def 의뢰(*args):
     else:
         result = enter_message('레벨')
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -593,10 +572,7 @@ async def 장비(*args):
     else:
         result = enter_message('잡 이름과 레벨')
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -607,10 +583,7 @@ async def 채집(*args):
     else:
         result = ENTER_KEYWORD_MESSAGE
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -621,10 +594,7 @@ async def 토벌(*args):
     else:
         result = enter_message('몬스터 이름')
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 @bot.command()
@@ -635,10 +605,7 @@ async def 풍맥(*args):
     else:
         result = enter_message('지역 이름')
 
-    if type(result) is str:
-        await bot.say(result)
-    else:  # embed
-        await bot.say(embed=result)
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 
 # Commands for DEBUG
