@@ -26,8 +26,6 @@ GAMER_FILE = 'json/gamer.json'
 GF_TIME_FILE = 'gf_time.json'
 MEMORY_FILE = 'json/memory.json'
 
-ENTER_DIGIT_MESSAGE = '알맞은 값을 입력해 주세요.'
-ENTER_KEYWORD_MESSAGE = '검색할 키워드를 입력해 주세요.'
 NO_SUCH_COMMAND_MESSAGE = '그런 명령어는 없어요.'
 WHAT_TO_DO_MESSAGE = '어떤 일을 할까요?'
 
@@ -43,8 +41,12 @@ revolvers = {}  # 리볼버
 # Commonly used
 
 
-def enter_message(what='키워드'):
+def please_enter_keyword(what='키워드'):
     return '검색할 ' + what + josa(what, '를') + ' 입력해 주세요.'
+
+
+def please_enter_right(what='값'):
+    return '알맞은 ' + what + josa(what, '을') + ' 입력해 주세요.'
 
 
 def now():
@@ -90,8 +92,9 @@ async def delete_message(msg):
     if msg is not None:
         try:
             await bot.delete_message(msg)
+            return True
         except discord.Forbidden:
-            pass
+            return False
 
 
 def find_id_by_name(name):
@@ -161,7 +164,7 @@ def cho_gen_lite(length):
 
 
 def jaum_search(genre=None, chos=cho_gen_lite(random.randint(2, 3))):
-    """genre : movie, music, animal, dic, game, people, book"""
+    """genre: movie, music, animal, dic, game, people, book"""
     BASE = 'http://www.jaum.kr/index.php?w='
     query = ''
     for i in range(len(chos)):
@@ -260,7 +263,7 @@ class ChoQuiz:
 
 
 def pubg_profile(name, server='krjp'):
-    # server: krjp, jp, as, na, eu, oc, sa, sea, ru
+    """server: krjp, jp, as, na, eu, oc, sa, sea, ru"""
     BASE = 'https://dak.gg/profile/'
     if server is None:
         url = BASE + name
@@ -466,6 +469,30 @@ def memory(author, *args):  # 기억
 
     else:  # len(args) == 0:
         ret = '기억해둘 내용이나 기억해낼 내용을 입력해 주세요.'
+
+    return ret
+
+
+def phonetic(*args):
+    ENG_ENG = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whisky', 'X-ray', 'Yankee', 'Zuru']
+    ENG_KOR = ['알파', '브라보', '찰리', '델타', '에코', '폭스트롯', '골프', '호텔', '인디아', '줄리엣', '킬로', '리마', '마이크', '노벰버', '오스카', '파파', '퀘벡', '로미오', '시에라', '탱고', '유니폼', '빅터', '위스키', '엑스레이', '양키', '줄루']
+    NUM_ENG = ['Nadazero', 'Unaone', 'Bissotwo', 'Terrathree', 'Kartefour', 'Pantafive', 'Soxisix', 'Setteseven', 'Oktoeight', 'Noveniner']
+
+    s = ' '.join(args)
+    ret = ''
+    capital = True
+    for c in s:
+        ord_c = ord(c)
+        if c == ' ':
+            capital = True
+            continue
+        if 65 <= ord_c <= 90:
+            ret += ENG_ENG[ord_c-65] + ' '
+        elif capital and 97 <= ord_c <= 122:
+            ret += ENG_ENG[ord_c-97] + ' '
+        elif capital or c.isdigit():
+            ret += c + ' '
+        capital = False
 
     return ret
 

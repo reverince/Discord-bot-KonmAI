@@ -105,6 +105,8 @@ async def 도움(*args):
                          value='특정 시각 혹은 일정 시간 후에 메시지와 함께 멘션해 드려요. ` ~알람 23:59 자라 ` ` ~알람 240 컵라면 `')
         result.add_field(name=PREFIX+'기억',
                          value='키워드에 관한 내용을 DB에 기억해요.\n` ~기억 원주율 3.14159265 `로 기억에 남기고 ` ~기억 원주율 `로 불러오세요.\n` ~기억 랜덤 `을 입력하면 아무 기억이나 불러와요.\n` ~기억 삭제 원주율`로 기억을 지울 수 있어요.', inline=True)
+        result.add_field(name=PREFIX+'포네틱',
+                         value='입력하신 문장을 포네틱 코드로 바꿔 드려요.', inline=True)
         '''
         result.add_field(name=PREFIX+'게이머 (WIP)',
                          value='게이머 관련 업무를 수행해요. `등록` / `나`', inline=True)
@@ -128,7 +130,7 @@ async def 더해(ctx, *args):
         result = sum(list(map(int, args)))
         result = ' + '.join(args) + ' = **' + str(result) + '**'
     except ValueError:
-        result = ENTER_DIGIT_MESSAGE
+        result = please_enter_right()
 
     await delete_message(ctx.message)
     await bot.say(ctx.message.author.mention+'님, '+result)
@@ -140,7 +142,7 @@ async def 빼(ctx, *args):
         result = int(args[0]) - sum(list(map(int, args[1:])))
         result = ' - '.join(args) + ' = **' + str(result) + '**'
     except ValueError:
-        result = ENTER_DIGIT_MESSAGE
+        result = please_enter_right()
 
     await delete_message(ctx.message)
     await bot.say(ctx.message.author.mention+'님, '+result)
@@ -218,7 +220,7 @@ async def 배그(*args):
         name = args[0]
         result = pubg_profile(name)
     else:
-        result = enter_message('아이디')
+        result = please_enter_keyword('아이디')
 
     if type(result) is str:
         await bot.say(result)
@@ -237,7 +239,7 @@ async def 소전(*args):
         else:
             result = '제조시간을 `340` 혹은 `0340`처럼 입력해 주세요.'
     else:
-        result = enter_message('제조시간')
+        result = please_enter_keyword('제조시간')
 
     await bot.say(result)
 
@@ -274,7 +276,7 @@ async def 제비(ctx, *args):
             else:
                 result = '준비된 제비가 없어요.'
         else:
-            result = ENTER_DIGIT_MESSAGE
+            result = please_enter_right()
     else:
         if channel not in lots_games.keys():
             result = '제비 개수를 입력해 주세요.'
@@ -315,7 +317,7 @@ async def 리볼버(ctx, *args):
             else:
                 result = '장전된 리볼버가 없어요.'
         else:
-            result = ENTER_DIGIT_MESSAGE
+            result = please_enter_right()
     else:
         if channel not in revolvers.keys():
             result = '먼저 리볼버를 장전해 주세요.'
@@ -356,9 +358,9 @@ async def 알람(ctx, *args):
                     raise ValueError
                 await alarm_at(hour, minute, channel, author, msg)
             except (ValueError, AttributeError):
-                await bot.say(ENTER_DIGIT_MESSAGE)
+                await bot.say(please_enter_right())
         else:
-            await bot.say(ENTER_DIGIT_MESSAGE)
+            await bot.say(please_enter_right())
     else:
         await bot.say('시간을 입력해 주세요.')
 
@@ -370,6 +372,13 @@ async def 기억(ctx, *args):
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
+
+@bot.command()
+async def 포네틱(*args):
+    """포네틱 코드로 변환"""
+    result = phonetic(*args)
+
+    await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
 # Commands for GAMER
 
@@ -478,7 +487,6 @@ async def S(ctx):
 
     if player in bj_games.keys():
         await delete_message(ctx.message)
-
         await blackjack_dturn(player, channel)
     else:
         await bot.say('진행 중인 게임이 없어요.')
@@ -493,7 +501,7 @@ async def 공식(*args):
         keyword = ' '.join(args)
         result = ffxiv.guide(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = please_enter_keyword
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -504,7 +512,7 @@ async def 레시피(*args):
         keyword = ' '.join(args)
         result = ffxiv.recipe(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = please_enter_keyword
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -515,7 +523,7 @@ async def 마물(*args):
         keyword = ' '.join(args)
         result = ffxiv.elite(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = please_enter_keyword
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -526,7 +534,7 @@ async def 상점(*args):
         keyword = ' '.join(args)
         result = ffxiv.seller(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = please_enter_keyword
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -542,9 +550,9 @@ async def 의뢰(*args):
                     job = 'gathering'
             result = ffxiv.guild_quest(level, job)
         else:
-            result = ENTER_DIGIT_MESSAGE
+            result = please_enter_right()
     else:
-        result = enter_message('레벨')
+        result = please_enter_keyword('레벨')
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -555,7 +563,7 @@ async def 잡퀘(*args):
         keyword = args[0]
         result = ffxiv.job_quest(keyword)
     else:
-        result = enter_message('잡 이름')
+        result = please_enter_keyword('잡 이름')
 
     await bot.say(result)
 
@@ -568,9 +576,9 @@ async def 장비(*args):
             level = int(args[1])
             result = ffxiv.tool(job, level)
         else:
-            result = ENTER_DIGIT_MESSAGE
+            result = please_enter_right()
     else:
-        result = enter_message('잡 이름과 레벨')
+        result = please_enter_keyword('잡 이름과 레벨')
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -581,7 +589,7 @@ async def 채집(*args):
         keyword = ' '.join(args)
         result = ffxiv.gathering(keyword)
     else:
-        result = ENTER_KEYWORD_MESSAGE
+        result = please_enter_keyword()
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -592,7 +600,7 @@ async def 토벌(*args):
         keyword = ' '.join(args)
         result = ffxiv.hunting(keyword)
     else:
-        result = enter_message('몬스터 이름')
+        result = please_enter_keyword('몬스터 이름')
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
@@ -603,7 +611,7 @@ async def 풍맥(*args):
         keyword = ' '.join(args)
         result = ffxiv.wind(keyword)
     else:
-        result = enter_message('지역 이름')
+        result = please_enter_keyword('지역 이름')
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
 
