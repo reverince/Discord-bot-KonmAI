@@ -106,7 +106,7 @@ async def 도움(*args):
         result.add_field(name=PREFIX+'기억',
                          value='키워드에 관한 내용을 DB에 기억해요.\n` ~기억 원주율 3.14159265 `로 기억에 남기고 ` ~기억 원주율 `로 불러오세요.\n` ~기억 랜덤 `을 입력하면 아무 기억이나 불러와요.\n` ~기억 삭제 원주율`로 기억을 지울 수 있어요.', inline=True)
         result.add_field(name=PREFIX+'포네틱',
-                         value='입력하신 문장을 포네틱 코드로 바꿔 드려요.', inline=True)
+                         value='입력하신 문자열을 포네틱 코드로 바꿔 드려요. ` ~포네틱 White House `\n숫자만 입력하면 ITU/IMO 표준 코드로 바꿔요.', inline=True)
         '''
         result.add_field(name=PREFIX+'게이머 (WIP)',
                          value='게이머 관련 업무를 수행해요. `등록` / `나`', inline=True)

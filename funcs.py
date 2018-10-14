@@ -477,24 +477,37 @@ def phonetic(*args):
     ENG_ENG = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whisky', 'X-ray', 'Yankee', 'Zuru']
     ENG_KOR = ['알파', '브라보', '찰리', '델타', '에코', '폭스트롯', '골프', '호텔', '인디아', '줄리엣', '킬로', '리마', '마이크', '노벰버', '오스카', '파파', '퀘벡', '로미오', '시에라', '탱고', '유니폼', '빅터', '위스키', '엑스레이', '양키', '줄루']
     NUM_ENG = ['Nadazero', 'Unaone', 'Bissotwo', 'Terrathree', 'Kartefour', 'Pantafive', 'Soxisix', 'Setteseven', 'Oktoeight', 'Noveniner']
+    NUM_KOR = ['나다제로', '우나원', '비소투', '테라트리', '카테포', '펜타파이프', '속시식스', '세테세븐', '옥토에이트', '노베나이너']
 
     s = ' '.join(args)
-    ret = ''
-    capital = True
-    for c in s:
-        ord_c = ord(c)
-        if c == ' ':
-            capital = True
-            continue
-        if 65 <= ord_c <= 90:
-            ret += ENG_ENG[ord_c-65] + ' '
-        elif capital and 97 <= ord_c <= 122:
-            ret += ENG_ENG[ord_c-97] + ' '
-        elif capital or c.isdigit():
-            ret += c + ' '
-        capital = False
+    ret_eng = ''
+    ret_kor = ''
+    if re.sub(' ', '', s).isdigit():
+        for c in s:
+            if c == ' ':
+                continue
+            int_c = int(c)
+            ret_eng += NUM_ENG[int_c] + ' '
+            ret_kor += NUM_KOR[int_c] + ' '
+    else:
+        capital = True
+        for c in s:
+            ord_c = ord(c)
+            if c == ' ':
+                capital = True
+                continue
+            if 65 <= ord_c <= 90:
+                ret_eng += ENG_ENG[ord_c-65] + ' '
+                ret_kor += ENG_KOR[ord_c-65] + ' '
+            elif capital and 97 <= ord_c <= 122:
+                ret_eng += ENG_ENG[ord_c-97] + ' '
+                ret_kor += ENG_KOR[ord_c-97] + ' '
+            elif capital or c.isdigit():
+                ret_eng += c + ' '
+                ret_kor += c + ' '
+            capital = False
 
-    return ret
+    return ret_eng[:-1] + ' (' + ret_kor[:-1] + ')'
 
 
 # for GAMER
