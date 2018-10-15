@@ -36,6 +36,7 @@ bj_msgs = {}  # 블랙잭 메시지
 cho_quizs = {}  # 초성퀴즈
 lots_games = {}  # 제비뽑기
 revolvers = {}  # 리볼버
+duels = {}  # 듀얼
 
 
 # Commonly used
@@ -508,6 +509,19 @@ def phonetic(*args):
             capital = False
 
     return ret_eng[:-1] + ' (' + ret_kor[:-1] + ')'
+
+
+async def duel_game(channel, author):
+    global duels
+    msg = await bot.send_message(channel, 'READY')
+    duels[author]['status'] = 'ready'
+    await asyncio.sleep(3.0)
+    await bot.edit_message(msg, '하나 :one:')
+    await asyncio.sleep(1.0)
+    await bot.edit_message(msg, '둘 :two:')
+    await asyncio.sleep(1.0)
+    await bot.edit_message(msg, '셋 :three:')
+    duels[author]['status'] = 'start'
 
 
 # for GAMER

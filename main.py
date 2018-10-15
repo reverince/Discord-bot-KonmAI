@@ -113,6 +113,8 @@ async def 도움(*args):
         result.add_field(name=PREFIX+'코인 (WIP)',
                          value='게이머 코인 관련 업무를 수행해요. `초기화` / `이체`', inline=True)
         '''
+        result.add_field(name=PREFIX+'결투 (WIP)',
+                         value='같은 서버에 있는 상대에게 도전할 수 있어요. ` ~듀얼 레버버 `\n상대가 도전에 응하면 결투가 시작돼요. 제가 셋을 세면 ` ~BANG `으로 먼저 맞추는 사람이 승리예요.')
         result.add_field(name=PREFIX+'블랙잭',
                          value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` ~H `, 스탠드는 ` ~S `를 입력하세요.\n코인을 걸 수 있어요.', inline=True)
         # 빈칸
@@ -379,6 +381,94 @@ async def 포네틱(*args):
     result = phonetic(*args)
 
     await (bot.say(result) if type(result) is str else bot.say(embed=result))
+
+
+@bot.command(pass_context=True)
+async def 결투(ctx, *args):
+    """BANG"""
+    global duels
+    server = ctx.message.server
+    channel = ctx.message.channel
+    author = ctx.message.author
+    if type(channel) is discord.PrivateChannel:
+        result = '개인 메시지에서는 실행할 수 없어요.'
+    elif len(args) > 0:
+        target = ' '.join(args)
+        members = list(server.members)
+        member_names = [m.name for m in members]
+        if target in member_names:
+            idx = member_names.index(target)
+            target = members[idx]
+            duels[target] = {'vs': author, 'status': 'request'}
+            await delete_message(ctx.message)
+            result = author.mention + '님이 ' + target.mention + \
+                '님에게 결투를 신청했어요! 도전에 응하시겠어요? (`~Y`/`~N`)'
+        else:
+            result = '상대를 찾지 못했어요.'
+    else:
+        result = '듀얼 상대를 정해 주세요.'
+
+    await bot.say(result)
+
+
+@bot.command(pass_context=True)
+async def Y(ctx):
+    global duels
+    result = None
+    channel = ctx.message.channel
+    author = ctx.message.author
+    if author in duels:
+        # TODO: 오래 지난 결투 도전 무시
+        await delete_message(ctx.message)
+        msg = author.mention + '님이 ' + duels[author]['vs'].mention + \
+            '님의 결투 도전에 응했어요!\n제가 셋을 세면 `~BANG`하세요!'
+        await bot.send_message(channel, msg)
+        await duel_game(channel, author)
+    else:
+        result = ':question:'
+
+    if result is not None:
+        await bot.say(result)
+
+
+@bot.command(pass_context=True)
+async def N(ctx):
+    global duels
+    author = ctx.message.author
+    if author in duels:
+        await delete_message(ctx.message)
+        result = author.mention + '님이 ' + duels[author]['vs'].mention + \
+            '님의 결투 도전을 받아들이지 않았어요. :unamused:'
+        del duels[author]
+    else:
+        result = ':question:'
+
+    await bot.say(result)
+
+
+@bot.command(pass_context=True)
+async def BANG(ctx):
+    global duels
+    duel = None
+    author = ctx.message.author
+    challengers = [dv['vs'] for dv in duels.values()]
+    if author in duels:
+        duel = duels[author]
+    elif author in challengers:
+        duel = duels[[k for k, v in duels.items() if v['vs'] == author][0]]
+    else:
+        result = '아무데서나 총을 쏘면 못 써요. :triumph:'
+
+    if duel is not None:
+        if duel['status'] == 'request':
+            result = 'request'
+        elif duel['status'] == 'ready':
+            result = author.mention + '님의 총알이 빗나갔어요!'
+        elif duel['status'] == 'start':
+            result = author.mention + 'killed ' + duel['vs'].mention
+            del duels[author]
+
+    await bot.say(result)
 
 # Commands for GAMER
 
