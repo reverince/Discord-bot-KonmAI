@@ -518,10 +518,17 @@ async def duel_game(channel, author):
     await asyncio.sleep(3.0)
     await bot.edit_message(msg, '하나 :one:')
     await asyncio.sleep(1.0)
-    await bot.edit_message(msg, '둘 :two:')
+    await bot.edit_message(msg, '둘 :one::two:')
     await asyncio.sleep(1.0)
-    await bot.edit_message(msg, '셋 :three:')
+    await bot.edit_message(msg, '셋 :one::two::three:')
     duels[author]['status'] = 'start'
+
+
+async def duel_end(channel, author):
+    global duels
+    duels[author]['status'] = 'end'
+    await asyncio.sleep(2.0)
+    del duels[author]
 
 
 # for GAMER

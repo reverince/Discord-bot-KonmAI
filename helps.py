@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 
-def default:
+def default():
     ret = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
     ret.set_author(name=BOTNAME, url=URL, icon_url=ICON_URL)
     ret.add_field(name=PREFIX+'더해',
@@ -38,7 +38,7 @@ def default:
     ret.add_field(name=PREFIX+'코인 (WIP)',
                      value='게이머 코인 관련 업무를 수행해요. `초기화` / `이체`', inline=True)
     '''
-    ret.add_field(name=PREFIX+'결투 (WIP)',
+    ret.add_field(name=PREFIX+'결투',
                   value='같은 서버에 있는 상대에게 도전할 수 있어요. ` ~듀얼 레버버 `\n상대가 도전에 응하면 결투가 시작돼요. 제가 셋을 세면 ` ~BANG `으로 먼저 맞추는 사람이 승리예요.')
     ret.add_field(name=PREFIX+'블랙잭',
                   value='저와 블랙잭 승부를 겨루실 수 있어요. 히트는 ` ~H `, 스탠드는 ` ~S `를 입력하세요.\n코인을 걸 수 있어요.', inline=True)
@@ -51,7 +51,7 @@ def default:
     return ret
 
 
-def ffxiv:
+def ffxiv():
     ret = discord.Embed(description='FFXIV 관련 명령어를 모아 놓았어요쿠뽀.', color=THEME_COLOR)
     ret.set_author(name=BOTNAME, url=URL, icon_url=ICON_URL)
     ret.add_field(name=PREFIX+'공식',

@@ -387,14 +387,19 @@ async def N(ctx):
 async def BANG(ctx):
     global duels
     duel = None
+    channel = ctx.message.channel
     author = ctx.message.author
     challengers = [dv['vs'] for dv in duels.values()]
     if author in duels:
         duel = duels[author]
+        target = duel['vs']
+        is_author_challenger = False
     elif author in challengers:
-        duel = duels[[k for k, v in duels.items() if v['vs'] == author][0]]
+        target = [k for k, v in duels.items() if v['vs'] == author][0]
+        duel = duels[target]
+        is_author_challenger = True
     else:
-        result = '아무데서나 총을 쏘면 못 써요. :triumph:'
+        result = author.mention + '님, 아무데서나 총을 쏘면 못 써요. :triumph:'
 
     if duel is not None:
         if duel['status'] == 'request':
@@ -402,10 +407,13 @@ async def BANG(ctx):
         elif duel['status'] == 'ready':
             result = author.mention + '님의 총알이 빗나갔어요!'
         elif duel['status'] == 'start':
-            result = author.mention + 'killed ' + duel['vs'].mention
-            del duels[author]
+            result = author.mention + '님의 총알이 ' + target.mention + '님을 관통했어요! :confetti_ball:'
+            await duel_end(channel, target if is_author_challenger else author)
+        elif duel['status'] == 'end':
+            result = author.mention + '님이 늦었어요!'
 
     await bot.say(result)
+
 
 # Commands for GAMER
 
