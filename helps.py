@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+from funcs import *
+
 
 def default():
     ret = discord.Embed(description='만나서 반가워요.', color=THEME_COLOR)
