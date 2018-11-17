@@ -172,49 +172,61 @@ def tool(job, level):  # 장비
     gatherer_equipments = funcs.read_json(GATHERER_EQUIPMENT_FILE)
 
     if job in tools:
+        value_main_tool = value_sub_tool = value_head = value_armor = \
+            value_glove = value_waist = value_leg = value_boot = '?'
+
         has_found_main_tool = has_found_sub_tool = has_found_head = \
             has_found_armor = has_found_glove = has_found_waist = \
             has_found_leg = has_found_boot = False
+
         for lvl in range(level, 0, -1):
             lvl = str(lvl)
             if not has_found_main_tool and lvl in tools[job]['main']:
+                value_main_tool = lvl
                 main_tool = tools[job]['main'][lvl]
+                value_main_tool += ' ' + main_tool['name']
                 has_found_main_tool = True
             if not has_found_sub_tool and lvl in tools[job]['sub']:
+                value_sub_tool = lvl
                 sub_tool = tools[job]['sub'][lvl]
+                if job != '어부':
+                    value_sub_tool += sub_tool['name']
+                else:
+                    value_sub_tool += ', '.join(sub_tool['name'])
                 has_found_sub_tool = True
             if job in GATHERERS:
                 if not has_found_head and lvl in gatherer_equipments['head']:
+                    value_head = lvl
                     head = gatherer_equipments['head'][lvl]
+                    value_head += ' ' + head['name']
                     has_found_head = True
                 if not has_found_armor and lvl in gatherer_equipments['armor']:
+                    value_armor = lvl
                     armor = gatherer_equipments['armor'][lvl]
+                    value_armor += ' ' + armor['name']
                     has_found_armor = True
                 if not has_found_glove and lvl in gatherer_equipments['glove']:
+                    value_glove = lvl
                     glove = gatherer_equipments['glove'][lvl]
+                    value_glove += ' ' + glove['name']
                     has_found_glove = True
                 if not has_found_waist and lvl in gatherer_equipments['waist']:
+                    value_waist = lvl
                     waist = gatherer_equipments['waist'][lvl]
+                    value_waist += ' ' + waist['name']
                     has_found_waist = True
                 if not has_found_leg and lvl in gatherer_equipments['leg']:
+                    value_leg = lvl
                     leg = gatherer_equipments['leg'][lvl]
+                    value_leg += ' ' + leg['name']
                     has_found_leg = True
                 if not has_found_boot and lvl in gatherer_equipments['boot']:
+                    value_boot = lvl
                     boot = gatherer_equipments['boot'][lvl]
+                    value_boot += ' ' + boot['name']
                     has_found_boot = True
 
         title = '**' + job + '**의 ' + str(level) + '레벨 장비'
-        value_main_tool = main_tool['name'] + '\n(' + main_tool['pos'] + ')'
-        if job != '어부':
-            value_sub_tool = sub_tool['name'] + '\n(' + sub_tool['pos'] + ')'
-        else:
-            value_sub_tool = ', '.join(sub_tool['name']) + '\n'
-        value_head = head['name'] + '\n(' + head['pos'] + ')'
-        value_armor = armor['name'] + '\n(' + armor['pos'] + ')'
-        value_glove = glove['name'] + '\n(' + glove['pos'] + ')'
-        value_waist = waist['name'] + '\n(' + waist['pos'] + ')'
-        value_leg = leg['name'] + '\n(' + leg['pos'] + ')'
-        value_boot = boot['name'] + '\n(' + boot['pos'] + ')'
         name_main = '주 도구' if job != '어부' else '낚싯대'
         name_sub = '보조 도구' if job != '어부' else '미끼'
         ret = funcs.make_embed(title=title, by_me=True)
