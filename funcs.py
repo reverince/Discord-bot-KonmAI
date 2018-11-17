@@ -397,7 +397,7 @@ async def alarm_after(sleep_sec, channel, author, message=None):  # 알람
 
 
 async def alarm_at(hour, minute, channel, author, message=None):  # 알람
-    now = datetime.datetime.now() + DATETIME_DELTA
+    now = now()
     second_now = now.hour * 3600 + now.minute * 60 + now.second
     second_at = hour * 3600 + minute * 60
     second_to = second_at - second_now

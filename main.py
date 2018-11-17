@@ -336,7 +336,8 @@ async def 결투(ctx, *args):
         if target in member_names:
             idx = member_names.index(target)
             target = members[idx]
-            duels[target] = {'vs': author, 'status': 'request'}
+            now = datetime.datetime.now() + DATETIME_DELTA
+            duels[target] = {'vs': author, 'status': 'request', 'time': now}
             await delete_message(ctx.message)
             result = author.mention + '님이 ' + target.mention + \
                 '님에게 결투를 신청했어요! 도전에 응하시겠어요? (`~Y`/`~N`)'
@@ -355,12 +356,19 @@ async def Y(ctx):
     channel = ctx.message.channel
     author = ctx.message.author
     if author in duels:
-        # TODO: 오래 지난 결투 도전 무시
         await delete_message(ctx.message)
-        msg = author.mention + '님이 ' + duels[author]['vs'].mention + \
-            '님의 결투 도전에 응했어요!\n제가 셋을 세면 `~BANG`하세요!'
-        await bot.send_message(channel, msg)
-        await duel_game(channel, author)
+        now = datetime.datetime.now() + DATETIME_DELTA
+        time_spent = now - duels[author]['time']
+        if time_spent.total_seconds() > 60:
+            msg = '결투 신청으로부터 1분이 초과되어서 신청이 취소됐어요.'
+            msg += '(' + duels[author]['time'].strftime('%y-%m-%d %H:%M:%S') + ')'
+            await bot.send_message(channel, msg)
+            del duels[author]
+        else:
+            msg = author.mention + '님이 ' + duels[author]['vs'].mention + \
+                '님의 결투 도전에 응했어요!\n제가 셋을 세면 `~BANG`하세요!'
+            await bot.send_message(channel, msg)
+            await duel_game(channel, author)
     else:
         result = ':question:'
 
